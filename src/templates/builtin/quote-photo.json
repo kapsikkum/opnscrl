@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 2,
+  "id": "quote-photo",
+  "name": "Quote + photo",
+  "description": "A bold quote on the first slide, a full photo on the second.",
+  "tags": [
+    "quote",
+    "text"
+  ],
+  "canvas": {
+    "slideCount": 2,
+    "aspect": "4:5",
+    "customHeightPx": 1350,
+    "slideWidthPx": 1080,
+    "background": {
+      "kind": "solid",
+      "color": "#1d2740"
+    }
+  },
+  "layers": [
+    {
+      "id": "quote-photo-1",
+      "type": "text",
+      "x": 90,
+      "y": 90,
+      "width": 400,
+      "height": 378,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Quote mark",
+      "props": {
+        "text": "“",
+        "fontFamily": "'DM Serif Display', Georgia, serif",
+        "fontSize": 420,
+        "fontWeight": 400,
+        "color": "#ffb454",
+        "align": "left",
+        "lineHeight": 0.9,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "quote-photo-2",
+      "type": "text",
+      "x": 90,
+      "y": 470,
+      "width": 900,
+      "height": 520,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Quote",
+      "props": {
+        "text": "Make the thing you wish already existed.",
+        "fontFamily": "'Playfair Display', Georgia, serif",
+        "fontSize": 104,
+        "fontWeight": 700,
+        "color": "#fff7e8",
+        "align": "left",
+        "lineHeight": 1.15,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "quote-photo-3",
+      "type": "shape",
+      "x": 90,
+      "y": 1130,
+      "width": 120,
+      "height": 6,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Rule",
+      "props": {
+        "kind": "rect",
+        "fill": {
+          "kind": "solid",
+          "color": "#ffb454"
+        },
+        "stroke": "#111111",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      }
+    },
+    {
+      "id": "quote-photo-4",
+      "type": "text",
+      "x": 90,
+      "y": 1170,
+      "width": 800,
+      "height": 42,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Attribution",
+      "props": {
+        "text": "YOUR NAME",
+        "fontFamily": "'Space Grotesk', system-ui, sans-serif",
+        "fontSize": 38,
+        "fontWeight": 500,
+        "color": "#c9d2e8",
+        "align": "left",
+        "lineHeight": 1.1,
+        "letterSpacing": 8,
+        "stroke": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "quote-photo-5",
+      "type": "frame",
+      "x": 1140,
+      "y": 60,
+      "width": 960,
+      "height": 1230,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Photo",
+      "props": {
+        "cornerRadius": 36,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null
+      }
+    }
+  ],
+  "createdAt": 1767225600000
+}

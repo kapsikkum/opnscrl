@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 2,
+  "id": "minimal-border",
+  "name": "Minimal border",
+  "description": "A thin keyline on every slide around one wide photo, with page numbers.",
+  "tags": [
+    "minimal",
+    "border"
+  ],
+  "canvas": {
+    "slideCount": 3,
+    "aspect": "4:5",
+    "customHeightPx": 1350,
+    "slideWidthPx": 1080,
+    "background": {
+      "kind": "solid",
+      "color": "#fafaf7"
+    }
+  },
+  "layers": [
+    {
+      "id": "minimal-border-1",
+      "type": "frame",
+      "x": 120,
+      "y": 260,
+      "width": 3000,
+      "height": 830,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Wide photo",
+      "props": {
+        "cornerRadius": 0,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "minimal-border-2",
+      "type": "shape",
+      "x": 36,
+      "y": 36,
+      "width": 1008,
+      "height": 1278,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Keyline 1",
+      "props": {
+        "kind": "rect",
+        "fill": {
+          "kind": "solid",
+          "color": "rgba(0,0,0,0)"
+        },
+        "stroke": "#151515",
+        "strokeWidth": 3,
+        "cornerRadius": 0
+      }
+    },
+    {
+      "id": "minimal-border-3",
+      "type": "text",
+      "x": 90,
+      "y": 1190,
+      "width": 600,
+      "height": 35,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Page 1",
+      "props": {
+        "text": "01 / 03",
+        "fontFamily": "'Space Mono', ui-monospace, monospace",
+        "fontSize": 32,
+        "fontWeight": 400,
+        "color": "#111111",
+        "align": "left",
+        "lineHeight": 1.1,
+        "letterSpacing": 4,
+        "stroke": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "minimal-border-4",
+      "type": "shape",
+      "x": 1116,
+      "y": 36,
+      "width": 1008,
+      "height": 1278,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Keyline 2",
+      "props": {
+        "kind": "rect",
+        "fill": {
+          "kind": "solid",
+          "color": "rgba(0,0,0,0)"
+        },
+        "stroke": "#151515",
+        "strokeWidth": 3,
+        "cornerRadius": 0
+      }
+    },
+    {
+      "id": "minimal-border-5",
+      "type": "text",
+      "x": 1170,
+      "y": 1190,
+      "width": 600,
+      "height": 35,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Page 2",
+      "props": {
+        "text": "02 / 03",
+        "fontFamily": "'Space Mono', ui-monospace, monospace",
+        "fontSize": 32,
+        "fontWeight": 400,
+        "color": "#111111",
+        "align": "left",
+        "lineHeight": 1.1,
+        "letterSpacing": 4,
+        "stroke": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "minimal-border-6",
+      "type": "shape",
+      "x": 2196,
+      "y": 36,
+      "width": 1008,
+      "height": 1278,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Keyline 3",
+      "props": {
+        "kind": "rect",
+        "fill": {
+          "kind": "solid",
+          "color": "rgba(0,0,0,0)"
+        },
+        "stroke": "#151515",
+        "strokeWidth": 3,
+        "cornerRadius": 0
+      }
+    },
+    {
+      "id": "minimal-border-7",
+      "type": "text",
+      "x": 2250,
+      "y": 1190,
+      "width": 600,
+      "height": 35,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Page 3",
+      "props": {
+        "text": "03 / 03",
+        "fontFamily": "'Space Mono', ui-monospace, monospace",
+        "fontSize": 32,
+        "fontWeight": 400,
+        "color": "#111111",
+        "align": "left",
+        "lineHeight": 1.1,
+        "letterSpacing": 4,
+        "stroke": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "minimal-border-8",
+      "type": "text",
+      "x": 120,
+      "y": 110,
+      "width": 1200,
+      "height": 70,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Title",
+      "props": {
+        "text": "Untitled, no. 7",
+        "fontFamily": "'Playfair Display', Georgia, serif",
+        "fontSize": 64,
+        "fontWeight": 400,
+        "color": "#151515",
+        "align": "left",
+        "lineHeight": 1.1,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null
+      }
+    }
+  ],
+  "createdAt": 1767225600000
+}

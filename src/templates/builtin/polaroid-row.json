@@ -1,0 +1,299 @@
+{
+  "schemaVersion": 2,
+  "id": "polaroid-row",
+  "name": "Polaroid row",
+  "description": "Four tilted instant-print cards scattered across three slides, overlapping the seams.",
+  "tags": [
+    "collage",
+    "polaroid"
+  ],
+  "canvas": {
+    "slideCount": 3,
+    "aspect": "4:5",
+    "customHeightPx": 1350,
+    "slideWidthPx": 1080,
+    "background": {
+      "kind": "solid",
+      "color": "#e9dfcf"
+    }
+  },
+  "layers": [
+    {
+      "id": "polaroid-row-1",
+      "type": "shape",
+      "x": 239.94,
+      "y": 275.64,
+      "width": 640,
+      "height": 800,
+      "rotation": -6,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Card 1",
+      "props": {
+        "kind": "rect",
+        "fill": {
+          "kind": "solid",
+          "color": "#fdfcf8"
+        },
+        "stroke": "#d8cebd",
+        "strokeWidth": 2,
+        "cornerRadius": 6
+      }
+    },
+    {
+      "id": "polaroid-row-2",
+      "type": "frame",
+      "x": 277.31,
+      "y": 305.9,
+      "width": 572,
+      "height": 572,
+      "rotation": -6,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Photo 1",
+      "props": {
+        "cornerRadius": 2,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "polaroid-row-3",
+      "type": "text",
+      "x": 343.79,
+      "y": 938.42,
+      "width": 572,
+      "height": 92,
+      "rotation": -6,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Caption 1",
+      "props": {
+        "text": "summer",
+        "fontFamily": "Caveat, 'Comic Sans MS', cursive",
+        "fontSize": 84,
+        "fontWeight": 500,
+        "color": "#3a342b",
+        "align": "center",
+        "lineHeight": 1.1,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "polaroid-row-4",
+      "type": "shape",
+      "x": 1108.68,
+      "y": 278.65,
+      "width": 640,
+      "height": 800,
+      "rotation": 4,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Card 2",
+      "props": {
+        "kind": "rect",
+        "fill": {
+          "kind": "solid",
+          "color": "#fdfcf8"
+        },
+        "stroke": "#d8cebd",
+        "strokeWidth": 2,
+        "cornerRadius": 6
+      }
+    },
+    {
+      "id": "polaroid-row-5",
+      "type": "frame",
+      "x": 1140.23,
+      "y": 314.94,
+      "width": 572,
+      "height": 572,
+      "rotation": 4,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Photo 2",
+      "props": {
+        "cornerRadius": 2,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "polaroid-row-6",
+      "type": "text",
+      "x": 1095.86,
+      "y": 949.39,
+      "width": 572,
+      "height": 92,
+      "rotation": 4,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Caption 2",
+      "props": {
+        "text": "golden hour",
+        "fontFamily": "Caveat, 'Comic Sans MS', cursive",
+        "fontSize": 84,
+        "fontWeight": 500,
+        "color": "#3a342b",
+        "align": "center",
+        "lineHeight": 1.1,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "polaroid-row-7",
+      "type": "shape",
+      "x": 1709.5,
+      "y": 227.3,
+      "width": 640,
+      "height": 800,
+      "rotation": -3,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Card 3",
+      "props": {
+        "kind": "rect",
+        "fill": {
+          "kind": "solid",
+          "color": "#fdfcf8"
+        },
+        "stroke": "#d8cebd",
+        "strokeWidth": 2,
+        "cornerRadius": 6
+      }
+    },
+    {
+      "id": "polaroid-row-8",
+      "type": "frame",
+      "x": 1745.24,
+      "y": 259.47,
+      "width": 572,
+      "height": 572,
+      "rotation": -3,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Photo 3",
+      "props": {
+        "cornerRadius": 2,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "polaroid-row-9",
+      "type": "text",
+      "x": 1778.52,
+      "y": 894.6,
+      "width": 572,
+      "height": 92,
+      "rotation": -3,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Caption 3",
+      "props": {
+        "text": "good light",
+        "fontFamily": "Caveat, 'Comic Sans MS', cursive",
+        "fontSize": 84,
+        "fontWeight": 500,
+        "color": "#3a342b",
+        "align": "center",
+        "lineHeight": 1.1,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "polaroid-row-10",
+      "type": "shape",
+      "x": 2436.08,
+      "y": 263.63,
+      "width": 640,
+      "height": 800,
+      "rotation": 5,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Card 4",
+      "props": {
+        "kind": "rect",
+        "fill": {
+          "kind": "solid",
+          "color": "#fdfcf8"
+        },
+        "stroke": "#d8cebd",
+        "strokeWidth": 2,
+        "cornerRadius": 6
+      }
+    },
+    {
+      "id": "polaroid-row-11",
+      "type": "frame",
+      "x": 2466.99,
+      "y": 300.47,
+      "width": 572,
+      "height": 572,
+      "rotation": 5,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Photo 4",
+      "props": {
+        "cornerRadius": 2,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "polaroid-row-12",
+      "type": "text",
+      "x": 2411.56,
+      "y": 934.05,
+      "width": 572,
+      "height": 92,
+      "rotation": 5,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Caption 4",
+      "props": {
+        "text": "the end",
+        "fontFamily": "Caveat, 'Comic Sans MS', cursive",
+        "fontSize": 84,
+        "fontWeight": 500,
+        "color": "#3a342b",
+        "align": "center",
+        "lineHeight": 1.1,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null
+      }
+    }
+  ],
+  "createdAt": 1767225600000
+}

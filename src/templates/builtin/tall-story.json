@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 2,
+  "id": "tall-story",
+  "name": "Tall story 9:16",
+  "description": "Full-height slides with a wide framed photo and a big condensed headline.",
+  "tags": [
+    "story",
+    "headline"
+  ],
+  "canvas": {
+    "slideCount": 3,
+    "aspect": "9:16",
+    "customHeightPx": 1350,
+    "slideWidthPx": 1080,
+    "background": {
+      "kind": "solid",
+      "color": "#0e1116"
+    }
+  },
+  "layers": [
+    {
+      "id": "tall-story-1",
+      "type": "background",
+      "x": 0,
+      "y": 0,
+      "width": 3240,
+      "height": 1920,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": true,
+      "hidden": false,
+      "name": "Night",
+      "props": {
+        "fill": {
+          "kind": "linear-gradient",
+          "angle": 180,
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#10141c"
+            },
+            {
+              "offset": 1,
+              "color": "#2a1f3d"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tall-story-2",
+      "type": "text",
+      "x": 80,
+      "y": 130,
+      "width": 1700,
+      "height": 210,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Headline",
+      "props": {
+        "text": "THE LONG WAY ROUND",
+        "fontFamily": "Anton, Impact, sans-serif",
+        "fontSize": 210,
+        "fontWeight": 400,
+        "color": "#ffffff",
+        "align": "left",
+        "lineHeight": 1,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "tall-story-3",
+      "type": "frame",
+      "x": 70,
+      "y": 520,
+      "width": 3100,
+      "height": 1000,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Wide photo",
+      "props": {
+        "cornerRadius": 0,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": {
+          "width": 14,
+          "color": "#ffffff"
+        },
+        "shadow": null
+      }
+    },
+    {
+      "id": "tall-story-4",
+      "type": "line",
+      "x": 70,
+      "y": 1640,
+      "width": 3100,
+      "height": 40,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Arrow",
+      "props": {
+        "start": {
+          "x": 0,
+          "y": 0.5
+        },
+        "end": {
+          "x": 1,
+          "y": 0.5
+        },
+        "color": "#ffffff",
+        "width": 6,
+        "dash": "solid",
+        "startCap": "none",
+        "endCap": "arrow"
+      }
+    },
+    {
+      "id": "tall-story-5",
+      "type": "text",
+      "x": 70,
+      "y": 1710,
+      "width": 900,
+      "height": 48,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Subtitle",
+      "props": {
+        "text": "swipe to follow the road",
+        "fontFamily": "'Space Grotesk', system-ui, sans-serif",
+        "fontSize": 44,
+        "fontWeight": 400,
+        "color": "#cdd3e0",
+        "align": "left",
+        "lineHeight": 1.1,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null
+      }
+    }
+  ],
+  "createdAt": 1767225600000
+}

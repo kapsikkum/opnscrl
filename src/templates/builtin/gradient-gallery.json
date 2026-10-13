@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 2,
+  "id": "gradient-gallery",
+  "name": "Gradient gallery",
+  "description": "Four leaf-shaped photos floating on a sunset gradient.",
+  "tags": [
+    "gradient",
+    "colorful"
+  ],
+  "canvas": {
+    "slideCount": 4,
+    "aspect": "1:1",
+    "customHeightPx": 1350,
+    "slideWidthPx": 1080,
+    "background": {
+      "kind": "solid",
+      "color": "#ff7a59"
+    }
+  },
+  "layers": [
+    {
+      "id": "gradient-gallery-1",
+      "type": "background",
+      "x": 0,
+      "y": 0,
+      "width": 4320,
+      "height": 1080,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": true,
+      "hidden": false,
+      "name": "Sunset",
+      "props": {
+        "fill": {
+          "kind": "linear-gradient",
+          "angle": 100,
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#ff9a6a"
+            },
+            {
+              "offset": 0.5,
+              "color": "#ff4f8b"
+            },
+            {
+              "offset": 1,
+              "color": "#5b3bff"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "gradient-gallery-2",
+      "type": "frame",
+      "x": 150,
+      "y": 150,
+      "width": 780,
+      "height": 780,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Photo 1",
+      "props": {
+        "cornerRadius": [
+          280,
+          24,
+          280,
+          24
+        ],
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": {
+          "width": 10,
+          "color": "#ffffff"
+        },
+        "shadow": {
+          "color": "#2b0a4a",
+          "blur": 60,
+          "offsetX": 0,
+          "offsetY": 24,
+          "opacity": 0.4
+        }
+      }
+    },
+    {
+      "id": "gradient-gallery-3",
+      "type": "frame",
+      "x": 1230,
+      "y": 150,
+      "width": 780,
+      "height": 780,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Photo 2",
+      "props": {
+        "cornerRadius": [
+          24,
+          280,
+          24,
+          280
+        ],
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": {
+          "width": 10,
+          "color": "#ffffff"
+        },
+        "shadow": {
+          "color": "#2b0a4a",
+          "blur": 60,
+          "offsetX": 0,
+          "offsetY": 24,
+          "opacity": 0.4
+        }
+      }
+    },
+    {
+      "id": "gradient-gallery-4",
+      "type": "frame",
+      "x": 2310,
+      "y": 150,
+      "width": 780,
+      "height": 780,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Photo 3",
+      "props": {
+        "cornerRadius": [
+          280,
+          24,
+          280,
+          24
+        ],
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": {
+          "width": 10,
+          "color": "#ffffff"
+        },
+        "shadow": {
+          "color": "#2b0a4a",
+          "blur": 60,
+          "offsetX": 0,
+          "offsetY": 24,
+          "opacity": 0.4
+        }
+      }
+    },
+    {
+      "id": "gradient-gallery-5",
+      "type": "frame",
+      "x": 3390,
+      "y": 150,
+      "width": 780,
+      "height": 780,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Photo 4",
+      "props": {
+        "cornerRadius": [
+          24,
+          280,
+          24,
+          280
+        ],
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": {
+          "width": 10,
+          "color": "#ffffff"
+        },
+        "shadow": {
+          "color": "#2b0a4a",
+          "blur": 60,
+          "offsetX": 0,
+          "offsetY": 24,
+          "opacity": 0.4
+        }
+      }
+    },
+    {
+      "id": "gradient-gallery-6",
+      "type": "text",
+      "x": 150,
+      "y": 970,
+      "width": 700,
+      "height": 37,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Hint",
+      "props": {
+        "text": "swipe",
+        "fontFamily": "'Space Grotesk', system-ui, sans-serif",
+        "fontSize": 34,
+        "fontWeight": 500,
+        "color": "#ffffff",
+        "align": "left",
+        "lineHeight": 1.1,
+        "letterSpacing": 8,
+        "stroke": null,
+        "shadow": null
+      }
+    }
+  ],
+  "createdAt": 1767225600000
+}

@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 2,
+  "id": "triple-panorama",
+  "name": "Triple panorama",
+  "description": "One wide photo that runs across three slides, with a swipe cue underneath.",
+  "tags": [
+    "panorama",
+    "minimal"
+  ],
+  "canvas": {
+    "slideCount": 3,
+    "aspect": "4:5",
+    "customHeightPx": 1350,
+    "slideWidthPx": 1080,
+    "background": {
+      "kind": "solid",
+      "color": "#f4f1ea"
+    }
+  },
+  "layers": [
+    {
+      "id": "triple-panorama-1",
+      "type": "frame",
+      "x": 60,
+      "y": 200,
+      "width": 3120,
+      "height": 900,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Panorama photo",
+      "props": {
+        "cornerRadius": 28,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop a wide photo",
+        "border": null,
+        "shadow": {
+          "color": "#000000",
+          "blur": 50,
+          "offsetX": 0,
+          "offsetY": 18,
+          "opacity": 0.25
+        }
+      }
+    },
+    {
+      "id": "triple-panorama-2",
+      "type": "text",
+      "x": 60,
+      "y": 70,
+      "width": 1500,
+      "height": 77,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Title",
+      "props": {
+        "text": "One picture, three slides",
+        "fontFamily": "'Playfair Display', Georgia, serif",
+        "fontSize": 70,
+        "fontWeight": 700,
+        "color": "#111111",
+        "align": "left",
+        "lineHeight": 1.1,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "triple-panorama-3",
+      "type": "line",
+      "x": 60,
+      "y": 1190,
+      "width": 3120,
+      "height": 40,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Swipe cue",
+      "props": {
+        "start": {
+          "x": 0,
+          "y": 0.5
+        },
+        "end": {
+          "x": 1,
+          "y": 0.5
+        },
+        "color": "#2b2b2b",
+        "width": 4,
+        "dash": "dashed",
+        "startCap": "circle",
+        "endCap": "arrow"
+      }
+    },
+    {
+      "id": "triple-panorama-4",
+      "type": "text",
+      "x": 60,
+      "y": 1250,
+      "width": 600,
+      "height": 37,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Caption",
+      "props": {
+        "text": "swipe",
+        "fontFamily": "'Space Mono', ui-monospace, monospace",
+        "fontSize": 34,
+        "fontWeight": 400,
+        "color": "#111111",
+        "align": "left",
+        "lineHeight": 1.1,
+        "letterSpacing": 6,
+        "stroke": null,
+        "shadow": null
+      }
+    }
+  ],
+  "createdAt": 1767225600000
+}

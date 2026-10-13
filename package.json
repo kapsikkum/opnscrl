@@ -1,0 +1,34 @@
+{
+  "name": "opnscrl",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Open-source PWA for seamless multi-slide Instagram carousels",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@preact/signals": "^2.11.3",
+    "idb": "^8.0.4",
+    "jszip": "^3.10.2",
+    "konva": "^10.8.0",
+    "lz-string": "^1.5.0",
+    "preact": "^11.0.1",
+    "vite-plugin-pwa": "^2.0.0",
+    "workbox-window": "^7.4.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.6",
+    "@types/lz-string": "^1.3.34",
+    "fake-indexeddb": "^6.2.5",
+    "jsdom": "^30.1.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
+  }
+}

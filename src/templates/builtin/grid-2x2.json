@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 2,
+  "id": "grid-2x2",
+  "name": "2x2 grid",
+  "description": "Four square-ish photos in a tidy grid on a dark background.",
+  "tags": [
+    "grid",
+    "dark"
+  ],
+  "canvas": {
+    "slideCount": 1,
+    "aspect": "1:1",
+    "customHeightPx": 1350,
+    "slideWidthPx": 1080,
+    "background": {
+      "kind": "solid",
+      "color": "#121214"
+    }
+  },
+  "layers": [
+    {
+      "id": "grid-2x2-1",
+      "type": "frame",
+      "x": 40,
+      "y": 40,
+      "width": 490,
+      "height": 490,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Photo 1",
+      "props": {
+        "cornerRadius": 22,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "grid-2x2-2",
+      "type": "frame",
+      "x": 550,
+      "y": 40,
+      "width": 490,
+      "height": 490,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Photo 2",
+      "props": {
+        "cornerRadius": 22,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "grid-2x2-3",
+      "type": "frame",
+      "x": 40,
+      "y": 550,
+      "width": 490,
+      "height": 490,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Photo 3",
+      "props": {
+        "cornerRadius": 22,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null
+      }
+    },
+    {
+      "id": "grid-2x2-4",
+      "type": "frame",
+      "x": 550,
+      "y": 550,
+      "width": 490,
+      "height": 490,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Photo 4",
+      "props": {
+        "cornerRadius": 22,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null
+      }
+    }
+  ],
+  "createdAt": 1767225600000
+}
