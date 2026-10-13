@@ -42,6 +42,9 @@ function emptyFrame(layer: Layer & { type: 'image' | 'frame' }, index: number): 
       placeholderLabel: (p as { placeholderLabel?: string }).placeholderLabel ?? 'Drop photo',
       border: clone(p.border),
       shadow: clone(p.shadow),
+      // a template keeps the photo look, so a new photo dropped in gets the same grade
+      adjust: clone(p.adjust),
+      preset: p.preset,
     },
   };
 }
@@ -52,6 +55,11 @@ export function projectToTemplate(project: Project, opts: ProjectToTemplateOptio
   let photoIndex = 0;
   const used = new Set<string>();
   const layers: Layer[] = project.layers.map((l) => {
+    if (l.type === 'sticker') {
+      // uploaded stickers are part of the design (not the user's photos): always embed them
+      if (l.props.assetId) used.add(l.props.assetId);
+      return clone(l);
+    }
     if (l.type !== 'image' && l.type !== 'frame') return clone(l);
     if (includeAssets) {
       if (l.props.assetId) used.add(l.props.assetId);
@@ -62,7 +70,7 @@ export function projectToTemplate(project: Project, opts: ProjectToTemplateOptio
   });
 
   let assets: Record<string, TemplateAsset> | undefined;
-  if (includeAssets && used.size) {
+  if (used.size) {
     assets = {};
     for (const id of used) {
       const meta = project.assets[id];
@@ -110,6 +118,9 @@ export function templateToProject(template: Template, opts: TemplateToProjectOpt
     if ((copy.type === 'image' || copy.type === 'frame') && copy.props.assetId) {
       const mapped = assetIds.get(copy.props.assetId);
       copy.props.assetId = mapped ?? (copy.type === 'image' ? '' : null);
+    }
+    if (copy.type === 'sticker' && copy.props.assetId) {
+      copy.props.assetId = assetIds.get(copy.props.assetId) ?? null;
     }
     return copy;
   });

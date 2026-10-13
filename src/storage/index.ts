@@ -1,4 +1,5 @@
-export { getDb, resetDatabase, DB_NAME, type ThumbnailRecord } from './db';
+export { getDb, resetDatabase, DB_NAME, type ThumbnailRecord, type StickerRecord } from './db';
+export * from './stickers';
 export * from './projects';
 export * from './assets';
 export * from './templates';

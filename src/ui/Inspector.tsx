@@ -6,6 +6,7 @@ import { getLayerDefinition } from '../layers';
 import type { Editor } from '../state/editor';
 import { NumberField, SliderField, SpecField } from './Fields';
 import { Icon } from './Icon';
+import { AdjustSection } from './AdjustSection';
 
 function BaseFields({ layer, editor }: { layer: Layer; editor: Editor }) {
   const set = (key: 'x' | 'y' | 'width' | 'height' | 'rotation' | 'opacity', value: number) =>
@@ -125,6 +126,7 @@ export function Inspector({ editor }: { editor: Editor }) {
           ))}
         </section>
       ) : null}
+      {(layer.type === 'image' || layer.type === 'frame') && layer.props.assetId ? <AdjustSection layer={layer} editor={editor} /> : null}
       <BaseFields layer={layer} editor={editor} />
     </div>
   );

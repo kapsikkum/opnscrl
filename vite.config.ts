@@ -32,9 +32,16 @@ export default defineConfig({
       workbox: {
         // offline app shell: everything the build emits
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
+        // the HEIC decoder (~3 MB) is only needed for iPhone photos: cached on first use instead
+        globIgnores: ['**/heic-to-*.js'],
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
         runtimeCaching: [
+          {
+            urlPattern: ({ url }) => /\/assets\/heic-to-[^/]+\.js$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: { cacheName: 'heic-decoder', expiration: { maxEntries: 2 } },
+          },
           {
             // Google Fonts stylesheets: serve cached, refresh in the background
             urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com',

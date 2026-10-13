@@ -38,7 +38,30 @@ The UI never mutates the model: every edit is an `Op` sent through `Editor.dispa
 * `core/slides.ts`: `insertSlideOps`, `removeSlideOps`, `moveSlideOps` return ops that shift layers by whole slide widths (a layer belongs to the slide holding its bounding-box center; backgrounds are resized by `setCanvas(fitBackgrounds)`).
 * New op `rename`. Migration `migrations[1]` (v1 -> v2) adds `customHeightPx: 1350` and `border/shadow: null` to image/frame props.
 
+### Model additions (schema v3)
+
+- **Photo adjustments** on image/frame layers: `adjust` (13 sliders, all neutral at 0)
+  and `preset` (a named look from `core/adjust.ts` `PRESETS`, folded under the
+  sliders by `effectiveAdjust`). The per-pixel math (`applyAdjust`) is pure and
+  tested; `layers/shared/adjustImage.ts` runs it on a downscaled copy (1600 px)
+  while editing, debounced, and at full resolution for export, caching results
+  per photo + look. The image slot draws the adjusted canvas in place of the photo.
+- **`sticker` layer**: a built-in vector sticker (`layers/sticker/builtin.ts`,
+  original SVGs drawn in `currentColor`, recolored by `tint`) or an uploaded
+  PNG/SVG asset, fitted (contain) in its box. Uploaded stickers live in the
+  IndexedDB `stickers` store ("My stickers", DB version 2) and are never
+  garbage-collected; templates always embed them (they are design, not photos).
+  Emoji are plain text layers.
+- **`drawing` layer**: freehand strokes with points normalized to the layer box
+  (`core/drawing.ts` converts, simplifies and hit-tests). The renderer's draw
+  tool (`setDrawTool`) pauses selection/dragging and emits `stroke` / `erase`
+  paths in canvas px; `app/drawing.ts` turns each into one undoable op. Only
+  the strokes are clickable, so a canvas-wide drawing never blocks layers below.
+
 ### Snapping (`render/snap.ts`)
+
+Dragging and resizing both snap (resize snaps only the edges the active anchor moves; corners keep the aspect ratio). While resizing, the renderer bakes the transformer's scale into width/height every frame and re-renders through the layer definition, so content never stretches.
+
 
 Pure math: `collectSnapTargets(canvas, otherRects)` (slide edges + centers, canvas edges, other layers' edges + centers) and `snapRect(rect, targets, threshold)` -> `{ dx, dy, guides }`. The renderer calls it while dragging (threshold = 8 screen px / zoom), draws pink guide lines in its UI layer, and skips it while Alt is held or after `setSnapping(false)`. Other renderer additions: `zoomToRect`, `zoomToSlide`, `refreshText` (re-measure after web fonts load), an `activate` event (double click), one-pointer pan on empty space. `exportSlides` accepts `only: number[]` (used for thumbnails).
 

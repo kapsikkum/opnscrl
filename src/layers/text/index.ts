@@ -33,6 +33,10 @@ function apply(group: Konva.Group, layer: TextLayer): void {
     shadowOffsetY: p.shadow?.offsetY ?? 0,
     shadowOpacity: p.shadow?.opacity ?? 1,
   });
+  // A box narrower than a single glyph makes word wrap drop every line;
+  // never let text vanish: fall back to no wrapping in that case.
+  node.wrap('word');
+  if (p.text.trim() && node.textArr.length === 0) node.wrap('none');
   // Selection bounds follow the measured text height, not the stored one.
   applyBase(group, layer, node.height());
 }

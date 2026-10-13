@@ -2,10 +2,12 @@ import type Konva from 'konva';
 import { createId } from '../core/id';
 import type { Layer, LayerOf, LayerType, PropsOf } from '../core/types';
 import { backgroundLayer } from './background';
+import { drawingLayer } from './drawing';
 import { frameLayer } from './frame';
 import { imageLayer } from './image';
 import { lineLayer } from './line';
 import { shapeLayer } from './shape';
+import { stickerLayer } from './sticker';
 import { textLayer } from './text';
 import type { LayerDefinition, LayerRenderContext } from './types';
 
@@ -18,6 +20,8 @@ export const layerRegistry: Registry = {
   shape: shapeLayer,
   frame: frameLayer,
   line: lineLayer,
+  sticker: stickerLayer,
+  drawing: drawingLayer,
   background: backgroundLayer,
 };
 

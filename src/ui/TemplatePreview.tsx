@@ -1,4 +1,5 @@
 import type { JSX } from 'preact';
+import { getBuiltinSticker, stickerDataUrl } from '../layers/sticker/builtin';
 import { canvasSize, gradientLine, resolveCornerRadii } from '../core/geometry';
 import type { CanvasSettings, Fill, Layer } from '../core/types';
 import { capGeometry, linePoints } from '../layers/line';
@@ -86,6 +87,27 @@ function layerSvg(l: Layer, defs: JSX.Element[]): JSX.Element | null {
         </g>
       );
     }
+    case 'sticker': {
+      const st = getBuiltinSticker(l.props.builtinId);
+      if (!st) return <rect transform={tf} width={l.width} height={l.height} fill="#9ca3af" opacity={0.35} rx={24} />;
+      return <image transform={tf} width={l.width} height={l.height} href={stickerDataUrl(st, l.props.tint ?? undefined, 256)} opacity={l.opacity} preserveAspectRatio="xMidYMid meet" />;
+    }
+    case 'drawing':
+      return (
+        <g transform={tf} opacity={l.opacity}>
+          {l.props.strokes.map((s) => (
+            <polyline
+              points={s.points.map((v, k) => (k % 2 === 0 ? v * l.width : v * l.height)).join(' ')}
+              fill="none"
+              stroke={s.color}
+              stroke-width={s.width}
+              stroke-opacity={s.opacity}
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          ))}
+        </g>
+      );
     case 'text': {
       const p = l.props;
       return (

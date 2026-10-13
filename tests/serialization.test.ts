@@ -45,7 +45,7 @@ describe('serialization', () => {
 
 describe('layer registry', () => {
   it('registers every layer type and defaults satisfy their own schema', () => {
-    expect([...layerTypes].sort()).toEqual(['background', 'frame', 'image', 'line', 'shape', 'text']);
+    expect([...layerTypes].sort()).toEqual(['background', 'drawing', 'frame', 'image', 'line', 'shape', 'sticker', 'text']);
     for (const type of layerTypes) {
       const def = layerRegistry[type];
       expect(def.type).toBe(type);

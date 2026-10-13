@@ -48,8 +48,12 @@ export async function buildTemplate(
   opts: { name: string; description?: string; tags: string[]; includeAssets: boolean },
 ): Promise<Template> {
   const assetDataUrls: Record<string, string> = {};
-  if (opts.includeAssets) {
-    for (const id of projectAssetIds(project)) {
+  // photos only when asked; uploaded stickers always travel with the template
+  const ids = opts.includeAssets
+    ? projectAssetIds(project)
+    : new Set(project.layers.flatMap((l) => (l.type === 'sticker' && l.props.assetId ? [l.props.assetId] : [])));
+  {
+    for (const id of ids) {
       const blob = await getAsset(id);
       if (blob) assetDataUrls[id] = await blobToDataUrl(blob);
     }

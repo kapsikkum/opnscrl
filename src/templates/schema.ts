@@ -39,7 +39,7 @@ export const templateSchema = z
     t.layers.forEach((l, i) => {
       if (seen.has(l.id)) ctx.addIssue({ code: 'custom', message: `duplicate layer id "${l.id}"`, path: ['layers', i, 'id'] });
       seen.add(l.id);
-      const assetId = l.type === 'image' ? l.props.assetId : l.type === 'frame' ? l.props.assetId : null;
+      const assetId = l.type === 'image' || l.type === 'frame' || l.type === 'sticker' ? l.props.assetId : null;
       if (assetId && !t.assets?.[assetId]) {
         ctx.addIssue({ code: 'custom', message: `layer references missing asset "${assetId}"`, path: ['layers', i, 'props', 'assetId'] });
       }

@@ -47,6 +47,20 @@ export interface RendererEvents {
   'transform-end': TransformEndEvent;
   /** Double-click / double-tap on a layer. */
   activate: string;
+  /** A finished pen stroke while the draw tool is on: flat [x0, y0, x1, y1, ...] in canvas px. */
+  stroke: number[];
+  /** A finished eraser path while the draw tool is in eraser mode (canvas px). */
+  erase: number[];
+}
+
+/** Draw-mode settings; widths are in canvas px. */
+export interface DrawTool {
+  mode: 'pen' | 'eraser';
+  color: string;
+  width: number;
+  opacity: number;
+  /** Eraser radius in canvas px. */
+  eraserRadius: number;
 }
 
 export interface Renderer {
@@ -75,6 +89,8 @@ export interface Renderer {
   getLayerScreenBox(id: string): { left: number; top: number; scale: number; rotation: number } | null;
   /** Subscribe to viewport changes (pan/zoom/resize). */
   onViewportChange(cb: () => void): () => void;
+  /** Turn freehand draw mode on (pen or eraser) or off (null). Selection and dragging pause while on. */
+  setDrawTool(tool: DrawTool | null): void;
   destroy(): void;
 }
 
@@ -145,6 +161,8 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     select: new Set(),
     'transform-end': new Set(),
     activate: new Set(),
+    stroke: new Set(),
+    erase: new Set(),
   };
   let snapping = true;
   let editingId: string | null = null;
@@ -184,6 +202,7 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
   }
 
   function attachTransformer(): void {
+    if (drawTool) return;
     const nodes: Konva.Node[] = [];
     let hasText = false;
     for (const id of selection) {
@@ -284,6 +303,7 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     pan = null;
   }
   stage.on('mousedown touchstart', (e) => {
+    if (drawTool) return;
     if (pinching || ((e.evt as TouchEvent).touches?.length ?? 0) > 1) return;
     const target = e.target;
     if (target === stage) {
@@ -528,6 +548,87 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     if (group && !insideTransformer(e.target)) emit('activate', group.id());
   });
 
+  // ---- draw tool (freehand pen / stroke eraser) ----
+  let drawTool: DrawTool | null = null;
+  let drawing: { points: number[]; line: Konva.Line } | null = null;
+  const eraserCursor = new Konva.Circle({ visible: false, listening: false, stroke: '#2f7cf6', strokeWidth: 1.5, strokeScaleEnabled: false, dash: [4, 3] });
+  uiLayer.add(eraserCursor);
+
+  function pointer(): { x: number; y: number } | null {
+    return stage.getRelativePointerPosition();
+  }
+  function beginStroke(): void {
+    const p = pointer();
+    if (!drawTool || !p) return;
+    const eraser = drawTool.mode === 'eraser';
+    const line = new Konva.Line({
+      points: [p.x, p.y, p.x + 0.01, p.y],
+      stroke: eraser ? 'rgba(47,124,246,0.35)' : drawTool.color,
+      strokeWidth: eraser ? drawTool.eraserRadius * 2 : drawTool.width,
+      opacity: eraser ? 1 : drawTool.opacity,
+      lineCap: 'round',
+      lineJoin: 'round',
+      tension: 0.4,
+      listening: false,
+    });
+    uiLayer.add(line);
+    drawing = { points: [p.x, p.y], line };
+    uiLayer.batchDraw();
+  }
+  function extendStroke(): void {
+    const p = pointer();
+    if (!p) return;
+    if (drawTool?.mode === 'eraser') {
+      eraserCursor.setAttrs({ visible: true, x: p.x, y: p.y, radius: drawTool.eraserRadius });
+    }
+    if (!drawing) {
+      uiLayer.batchDraw();
+      return;
+    }
+    drawing.points.push(p.x, p.y);
+    drawing.line.points(drawing.points);
+    uiLayer.batchDraw();
+  }
+  function endStroke(cancel = false): void {
+    if (!drawing) return;
+    const { points, line } = drawing;
+    drawing = null;
+    line.destroy();
+    uiLayer.batchDraw();
+    if (cancel || !drawTool) return;
+    emit(drawTool.mode === 'eraser' ? 'erase' : 'stroke', points);
+  }
+  stage.on('mousedown.draw touchstart.draw', (e) => {
+    if (!drawTool) return;
+    if (((e.evt as TouchEvent).touches?.length ?? 0) > 1) {
+      endStroke(true); // second finger: this is a pinch, not a stroke
+      return;
+    }
+    e.evt.preventDefault();
+    beginStroke();
+  });
+  stage.on('mousemove.draw touchmove.draw', () => {
+    if (drawTool && !pinching) extendStroke();
+  });
+  const finishDraw = () => endStroke(pinching);
+  window.addEventListener('mouseup', finishDraw);
+  window.addEventListener('touchend', finishDraw);
+  stage.on('mouseleave.draw', () => {
+    eraserCursor.visible(false);
+    uiLayer.batchDraw();
+  });
+
+  function setDrawTool(tool: DrawTool | null): void {
+    if (!tool) endStroke(true);
+    drawTool = tool;
+    world.listening(!tool);
+    eraserCursor.visible(false);
+    container.style.cursor = tool ? (tool.mode === 'eraser' ? 'cell' : 'crosshair') : '';
+    if (tool) transformer.nodes([]);
+    else attachTransformer();
+    uiLayer.batchDraw();
+  }
+
   // ---- viewport: fit, zoom, pan ----
   function applyViewport(scale: number, x: number, y: number): void {
     stage.scale({ x: scale, y: scale });
@@ -677,6 +778,7 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
       const abs = node.getAbsoluteTransform().point({ x: 0, y: 0 });
       return { left: abs.x, top: abs.y, scale: node.getAbsoluteScale().x, rotation: node.getAbsoluteRotation() };
     },
+    setDrawTool,
     onViewportChange(cb) {
       viewportListeners.add(cb);
       return () => viewportListeners.delete(cb);
@@ -699,12 +801,16 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('keyup', onKey);
       window.removeEventListener('blur', onBlur);
+      window.removeEventListener('mouseup', finishDraw);
+      window.removeEventListener('touchend', finishDraw);
       window.removeEventListener('mouseup', endPan);
       window.removeEventListener('touchend', endPan);
       window.removeEventListener('touchcancel', endPan);
       listeners.select.clear();
       listeners['transform-end'].clear();
       listeners.activate.clear();
+      listeners.stroke.clear();
+      listeners.erase.clear();
       viewportListeners.clear();
       reconciler.destroy();
       stage.destroy();

@@ -4,6 +4,7 @@
  *   templates   key: template.id     value: Template
  *   assets      key: assetId         value: Blob (the photo bytes)
  *   thumbnails  key: project.id      value: { blob, updatedAt } (scaled export of slide 1)
+ *   stickers    key: assetId         value: StickerRecord ("My stickers" library; bytes live in assets)
  */
 import { openDB, deleteDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { Project } from '../core/types';
@@ -15,26 +16,41 @@ export interface ThumbnailRecord {
   updatedAt: number;
 }
 
+export interface StickerRecord {
+  assetId: string;
+  mime: string;
+  w: number;
+  h: number;
+  addedAt: number;
+}
+
 export interface OpnscrlDB extends DBSchema {
   projects: { key: string; value: Project; indexes: { updatedAt: number } };
   templates: { key: string; value: Template };
   assets: { key: string; value: Blob };
   thumbnails: { key: string; value: ThumbnailRecord };
+  stickers: { key: string; value: StickerRecord; indexes: { addedAt: number } };
 }
 
 export const DB_NAME = 'opnscrl';
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 let dbPromise: Promise<IDBPDatabase<OpnscrlDB>> | null = null;
 
 export function getDb(): Promise<IDBPDatabase<OpnscrlDB>> {
   dbPromise ??= openDB<OpnscrlDB>(DB_NAME, DB_VERSION, {
-    upgrade(db) {
-      const projects = db.createObjectStore('projects', { keyPath: 'id' });
-      projects.createIndex('updatedAt', 'updatedAt');
-      db.createObjectStore('templates', { keyPath: 'id' });
-      db.createObjectStore('assets');
-      db.createObjectStore('thumbnails');
+    upgrade(db, oldVersion) {
+      if (oldVersion < 1) {
+        const projects = db.createObjectStore('projects', { keyPath: 'id' });
+        projects.createIndex('updatedAt', 'updatedAt');
+        db.createObjectStore('templates', { keyPath: 'id' });
+        db.createObjectStore('assets');
+        db.createObjectStore('thumbnails');
+      }
+      if (oldVersion < 2) {
+        const stickers = db.createObjectStore('stickers', { keyPath: 'assetId' });
+        stickers.createIndex('addedAt', 'addedAt');
+      }
     },
     terminated() {
       dbPromise = null;

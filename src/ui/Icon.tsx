@@ -30,6 +30,24 @@ const PATHS: Record<string, JSX.Element> = {
     </>
   ),
   up: <path d="M6 14l6-6 6 6" />,
+  sticker: (
+    <>
+      <path d="M14 3H7a4 4 0 00-4 4v10a4 4 0 004 4h6l8-8V7a4 4 0 00-4-4h-3z" />
+      <path d="M13 21v-4a4 4 0 014-4h4" />
+    </>
+  ),
+  pen: (
+    <>
+      <path d="M4 20l4-1 11-11a2.1 2.1 0 00-3-3L5 16l-1 4z" />
+      <path d="M14 7l3 3" />
+    </>
+  ),
+  eraser: (
+    <>
+      <path d="M8 20h12M5 15l9-9a2 2 0 012.8 0l3.2 3.2a2 2 0 010 2.8L13 19H9l-4-4z" />
+      <path d="M9.5 10.5l5 5" />
+    </>
+  ),
   grip: (
     <g fill="currentColor" stroke="none">
       <circle cx="9" cy="6" r="1.6" />

@@ -29,7 +29,7 @@ export function projectAssetIds(project: {
 }): Set<string> {
   const ids = new Set(Object.keys(project.assets));
   for (const l of project.layers) {
-    if (l.type === 'image' || l.type === 'frame') {
+    if (l.type === 'image' || l.type === 'frame' || l.type === 'sticker') {
       const id = (l.props as { assetId?: string | null }).assetId;
       if (id) ids.add(id);
     }
@@ -46,6 +46,8 @@ export async function gcAssets(candidates?: Iterable<string>): Promise<string[]>
   const db = await getDb();
   const referenced = new Set<string>();
   for (const p of await db.getAll('projects')) for (const id of projectAssetIds(p)) referenced.add(id);
+  // the "My stickers" library keeps its images even when no project uses them
+  for (const id of (await db.getAllKeys('stickers')) as string[]) referenced.add(id);
   const pool = candidates ? [...new Set(candidates)] : ((await db.getAllKeys('assets')) as string[]);
   const removed: string[] = [];
   const tx = db.transaction('assets', 'readwrite');

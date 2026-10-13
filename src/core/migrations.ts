@@ -4,6 +4,7 @@
  * schema: bump SCHEMA_VERSION in schema.ts, add `migrations[oldVersion]`, and
  * add a test.
  */
+import { neutralAdjust } from './adjust';
 import { SCHEMA_VERSION } from './schema';
 
 export type RawDoc = Record<string, unknown>;
@@ -58,6 +59,20 @@ migrations[1] = (doc) => {
       })
     : doc.layers;
   return { ...doc, canvas, layers };
+};
+
+/**
+ * v2 -> v3: image/frame layers gain photo `adjust` (all neutral) and `preset`
+ * (null). The new `sticker` and `drawing` layer types need no migration.
+ */
+migrations[2] = (doc) => {
+  const layers = Array.isArray(doc.layers)
+    ? doc.layers.map((l) => {
+        if (!isObj(l) || (l.type !== 'image' && l.type !== 'frame') || !isObj(l.props)) return l;
+        return { ...l, props: { adjust: neutralAdjust(), preset: null, ...l.props } };
+      })
+    : doc.layers;
+  return { ...doc, layers };
 };
 
 export function detectVersion(doc: RawDoc): number {

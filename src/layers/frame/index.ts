@@ -1,6 +1,7 @@
 import type Konva from 'konva';
 import { framePropsSchema } from '../../core/schema';
 import type { FrameLayer } from '../../core/types';
+import { effectiveAdjust, neutralAdjust } from '../../core/adjust';
 import { applyBase, createLayerGroup } from '../shared/base';
 import { borderField, fitField, radiusField, shadowField } from '../shared/inspector';
 import { updateSlot } from '../shared/imageSlot';
@@ -24,6 +25,8 @@ function apply(group: Konva.Group, layer: FrameLayer, ctx: LayerRenderContext): 
       height: layer.height,
       placeholderLabel: p.placeholderLabel,
       showPlaceholder: ctx.mode === 'edit',
+      adjust: effectiveAdjust(p.adjust, p.preset),
+      mode: ctx.mode,
     },
     ctx,
   );
@@ -42,6 +45,8 @@ export const frameLayer: LayerDefinition<'frame'> = {
     placeholderLabel: 'Drop photo',
     border: null,
     shadow: null,
+    adjust: neutralAdjust(),
+    preset: null,
   }),
   base: { width: 700, height: 900 },
   inspector: [fitField, radiusField, { key: 'placeholderLabel', label: 'Placeholder text', kind: 'text' }, borderField, shadowField],

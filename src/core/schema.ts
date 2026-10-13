@@ -8,7 +8,7 @@
  */
 import { z } from 'zod';
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const ASPECTS = ['4:5', '1:1', '9:16', '3:4', '16:9', '2:3', '4:3', '1.91:1', 'custom'] as const;
 export const aspectSchema = z.enum(ASPECTS);
@@ -65,6 +65,34 @@ export const boxShadowSchema = z.object({
   opacity: z.number().min(0).max(1),
 });
 
+/**
+ * Photo adjustments. Every value is neutral at 0. Signed sliders run -100..100;
+ * one-sided effects (sharpen, blur, grain, vignette) run 0..100.
+ */
+export const ADJUST_KEYS = [
+  'brightness',
+  'contrast',
+  'saturation',
+  'exposure',
+  'temperature',
+  'tint',
+  'vibrance',
+  'highlights',
+  'shadows',
+  'sharpen',
+  'blur',
+  'grain',
+  'vignette',
+] as const;
+export const ONE_SIDED_ADJUST = ['sharpen', 'blur', 'grain', 'vignette'] as const;
+
+export const adjustSchema = z.object(
+  Object.fromEntries(ADJUST_KEYS.map((k) => [k, z.number().min(-100).max(100)])) as Record<
+    (typeof ADJUST_KEYS)[number],
+    z.ZodNumber
+  >,
+);
+
 export const imagePropsSchema = z.object({
   assetId: z.string(),
   fit: fitSchema,
@@ -74,6 +102,9 @@ export const imagePropsSchema = z.object({
   flipY: z.boolean(),
   border: borderSchema.nullable(),
   shadow: boxShadowSchema.nullable(),
+  adjust: adjustSchema,
+  /** Named look (see core/adjust PRESETS) layered under `adjust`; null = none. */
+  preset: z.string().nullable(),
 });
 
 export const textStrokeSchema = z.object({ color, width: z.number().min(0) });
@@ -113,6 +144,8 @@ export const framePropsSchema = z.object({
   placeholderLabel: z.string(),
   border: borderSchema.nullable(),
   shadow: boxShadowSchema.nullable(),
+  adjust: adjustSchema,
+  preset: z.string().nullable(),
 });
 
 export const LINE_DASHES = ['solid', 'dashed', 'dotted'] as const;
@@ -133,6 +166,31 @@ export const linePropsSchema = z.object({
   dash: z.enum(LINE_DASHES),
   startCap: z.enum(LINE_CAPS),
   endCap: z.enum(LINE_CAPS),
+});
+
+/**
+ * A sticker: a built-in vector sticker (`builtinId`) or an uploaded PNG/SVG
+ * (`assetId`), fitted inside the box. `tint` recolors single-color built-ins.
+ */
+export const stickerPropsSchema = z.object({
+  builtinId: z.string().nullable(),
+  assetId: z.string().nullable(),
+  tint: color.nullable(),
+  flipX: z.boolean(),
+  flipY: z.boolean(),
+});
+
+/** One freehand stroke; `points` is a flat [x0, y0, x1, y1, ...] list normalized to the layer box. */
+export const strokeSchema = z.object({
+  points: z.array(z.number()),
+  color,
+  /** Stroke width in canvas px. */
+  width: z.number().gt(0),
+  opacity: z.number().min(0).max(1),
+});
+
+export const drawingPropsSchema = z.object({
+  strokes: z.array(strokeSchema),
 });
 
 export const backgroundPropsSchema = z.object({
@@ -160,6 +218,8 @@ export const textLayerSchema = z.object({ ...layerBase, type: z.literal('text'),
 export const shapeLayerSchema = z.object({ ...layerBase, type: z.literal('shape'), props: shapePropsSchema });
 export const frameLayerSchema = z.object({ ...layerBase, type: z.literal('frame'), props: framePropsSchema });
 export const lineLayerSchema = z.object({ ...layerBase, type: z.literal('line'), props: linePropsSchema });
+export const stickerLayerSchema = z.object({ ...layerBase, type: z.literal('sticker'), props: stickerPropsSchema });
+export const drawingLayerSchema = z.object({ ...layerBase, type: z.literal('drawing'), props: drawingPropsSchema });
 export const backgroundLayerSchema = z.object({
   ...layerBase,
   type: z.literal('background'),
@@ -172,6 +232,8 @@ export const layerSchema = z.discriminatedUnion('type', [
   shapeLayerSchema,
   frameLayerSchema,
   lineLayerSchema,
+  stickerLayerSchema,
+  drawingLayerSchema,
   backgroundLayerSchema,
 ]);
 

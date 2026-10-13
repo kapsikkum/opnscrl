@@ -25,10 +25,14 @@ import { GridDialog } from './GridDialog';
 import { Preview } from './Preview';
 import { ShareTemplateDialog } from './ShareTemplateDialog';
 import { TextEditOverlay } from './TextEditOverlay';
+import { StickerPicker } from './StickerPicker';
+import { DrawBar } from './DrawBar';
+import { addStroke, eraseAlong } from '../app/drawing';
+import type { DrawTool } from '../render';
 import { showSafeArea, showSeams, snapping } from './viewSettings';
 
 type Tab = 'edit' | 'layers' | 'slides' | 'canvas';
-type Modal = null | 'export' | 'preview' | 'share' | 'grid';
+type Modal = null | 'export' | 'preview' | 'share' | 'grid' | 'sticker';
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'edit', label: 'Edit', icon: 'sliders' },
@@ -53,6 +57,10 @@ export function Editor({ session }: { session: Session }) {
   const [shapeMenu, setShapeMenu] = useState(false);
   const [importing, setImporting] = useState(false);
   const [editingText, setEditingText] = useState<string | null>(null);
+  const [drawTool, setDrawTool] = useState<DrawTool | null>(null);
+  const lastPen = useRef<DrawTool>({ mode: 'pen', color: '#111111', width: 14, opacity: 1, eraserRadius: 30 });
+  const drawRef = useRef<DrawTool | null>(null);
+  drawRef.current = drawTool;
   const modalRef = useRef<Modal>(null);
   modalRef.current = modal;
 
@@ -85,6 +93,14 @@ export function Editor({ session }: { session: Session }) {
       if (layer.type === 'text') setEditingText(id);
       else setPanelOpen(true);
     });
+    const offStroke = renderer.on('stroke', (pts) => {
+      const t = drawRef.current;
+      if (t) addStroke(editor, pts, t);
+    });
+    const offErase = renderer.on('erase', (pts) => {
+      const t = drawRef.current;
+      if (t) eraseAlong(editor, pts, t.eraserRadius);
+    });
     const stops = [
       effect(() => renderer.setProject(editor.project.value)),
       effect(() => renderer.setSelection(editor.selection.value)),
@@ -114,11 +130,18 @@ export function Editor({ session }: { session: Session }) {
       offSelect();
       offEnd();
       offActivate();
+      offStroke();
+      offErase();
       stops.forEach((s) => s());
       renderer.destroy();
       rendererRef.current = null;
     };
   }, [session]);
+
+  useEffect(() => {
+    rendererRef.current?.setDrawTool(drawTool);
+    if (drawTool) lastPen.current = drawTool;
+  }, [drawTool]);
 
   // ---- keyboard ----
   useEffect(() => {
@@ -142,7 +165,8 @@ export function Editor({ session }: { session: Session }) {
         e.preventDefault();
         deleteSelected(editor);
       } else if (e.key === 'Escape') {
-        editor.select([]);
+        if (drawRef.current) setDrawTool(null);
+        else editor.select([]);
       } else if (e.key.startsWith('Arrow') && editor.selection.peek().length) {
         e.preventDefault();
         const step = e.shiftKey ? 10 : 1;
@@ -180,6 +204,8 @@ export function Editor({ session }: { session: Session }) {
     { id: 'line', label: 'Line', icon: 'line', run: () => addLine(editor, addAt()) },
     { id: 'frame', label: 'Frame', icon: 'frame', run: () => addFrame(editor, addAt()) },
     { id: 'grid', label: 'Grid', icon: 'grid', run: () => setModal('grid') },
+    { id: 'sticker', label: 'Sticker', icon: 'sticker', run: () => setModal('sticker') },
+    { id: 'draw', label: 'Draw', icon: 'pen', run: () => setDrawTool((t) => (t ? null : { ...lastPen.current })) },
   ];
 
   return (
@@ -258,6 +284,7 @@ export function Editor({ session }: { session: Session }) {
             }}
           />
           {importing ? <div class="busy-pill" role="status">Importing photos...</div> : null}
+          {drawTool ? <DrawBar tool={drawTool} onChange={setDrawTool} onDone={() => setDrawTool(null)} /> : null}
           {editingText && rendererRef.current && hostRef.current ? (
             <TextEditOverlay
               key={editingText}
@@ -302,7 +329,7 @@ export function Editor({ session }: { session: Session }) {
 
       <nav class="toolbar" aria-label="Add">
         {tools.map((t) => (
-          <button key={t.id} class="tool" onClick={t.run} aria-haspopup={t.id === 'shape' ? 'menu' : undefined} aria-expanded={t.id === 'shape' ? shapeMenu : undefined}>
+          <button key={t.id} class={`tool${t.id === 'draw' && drawTool ? ' on' : ''}`} aria-pressed={t.id === 'draw' ? !!drawTool : undefined} onClick={t.run} aria-haspopup={t.id === 'shape' ? 'menu' : undefined} aria-expanded={t.id === 'shape' ? shapeMenu : undefined}>
             <Icon name={t.icon} />
             <span>{t.label}</span>
           </button>
@@ -348,6 +375,7 @@ export function Editor({ session }: { session: Session }) {
       {modal === 'preview' ? <Preview session={session} onClose={() => setModal(null)} /> : null}
       {modal === 'share' ? <ShareTemplateDialog session={session} onClose={() => setModal(null)} /> : null}
       {modal === 'grid' ? <GridDialog session={session} onClose={() => setModal(null)} /> : null}
+      {modal === 'sticker' ? <StickerPicker session={session} onClose={() => setModal(null)} /> : null}
     </div>
   );
 }

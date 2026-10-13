@@ -74,7 +74,7 @@ describe('projects store', () => {
     delete v1.canvas.customHeightPx;
     await db.put('projects', v1);
     const loaded = await loadProject('old');
-    expect(loaded?.schemaVersion).toBe(2);
+    expect(loaded?.schemaVersion).toBe(3);
     expect(loaded?.canvas.customHeightPx).toBe(1350);
   });
 

@@ -1,5 +1,6 @@
 import { imagePropsSchema } from '../../core/schema';
 import type { ImageLayer } from '../../core/types';
+import { effectiveAdjust, neutralAdjust } from '../../core/adjust';
 import { applyBase, createLayerGroup } from '../shared/base';
 import { borderField, fitField, radiusField, shadowField } from '../shared/inspector';
 import { updateSlot } from '../shared/imageSlot';
@@ -24,6 +25,8 @@ function apply(group: Konva.Group, layer: ImageLayer, ctx: LayerRenderContext): 
       height: layer.height,
       placeholderLabel: '',
       showPlaceholder: ctx.mode === 'edit',
+      adjust: effectiveAdjust(p.adjust, p.preset),
+      mode: ctx.mode,
     },
     ctx,
   );
@@ -43,6 +46,8 @@ export const imageLayer: LayerDefinition<'image'> = {
     flipY: false,
     border: null,
     shadow: null,
+    adjust: neutralAdjust(),
+    preset: null,
   }),
   base: { width: 1080, height: 1080 },
   inspector: [

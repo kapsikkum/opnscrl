@@ -10,8 +10,10 @@
  */
 import Konva from 'konva';
 import { fitImage, resolveCornerRadii, type Rect } from '../../core/geometry';
-import type { Border, BoxShadow, CornerRadius, Crop } from '../../core/types';
+import { isNeutral } from '../../core/adjust';
+import type { Adjust, Border, BoxShadow, CornerRadius, Crop } from '../../core/types';
 import type { ImageSource, LayerRenderContext } from '../types';
+import { adjustCacheKey, EDIT_MAX_EDGE, getCachedAdjusted, renderAdjusted } from './adjustImage';
 import { pathRoundedRect, setRoundedClip } from './base';
 
 export interface SlotParams {
@@ -27,11 +29,19 @@ export interface SlotParams {
   height: number;
   placeholderLabel: string;
   showPlaceholder: boolean;
+  /** Effective photo adjustment (preset already folded in); null/neutral = untouched. */
+  adjust: Adjust | null;
+  mode: 'edit' | 'export';
 }
 
 interface SlotState {
   assetId: string | null;
   source?: ImageSource;
+  /** What is drawn: the source, or an adjusted canvas rendered from it. */
+  display?: ImageSource | HTMLCanvasElement;
+  displayKey?: string;
+  pendingKey?: string;
+  timer?: ReturnType<typeof setTimeout>;
   params: SlotParams;
 }
 
@@ -42,7 +52,7 @@ const SHADOW_NAME = 'opnscrl-shadow';
 const BORDER_NAME = 'opnscrl-border';
 const states = new WeakMap<Konva.Group, SlotState>();
 
-export function sourceSize(src: ImageSource): { width: number; height: number } {
+export function sourceSize(src: ImageSource | HTMLCanvasElement): { width: number; height: number } {
   if ('naturalWidth' in src) return { width: src.naturalWidth || src.width, height: src.naturalHeight || src.height };
   return { width: src.width, height: src.height };
 }
@@ -128,7 +138,8 @@ function ensureChildren(group: Konva.Group): {
 function layout(group: Konva.Group): void {
   const state = states.get(group);
   if (!state) return;
-  const { params, source } = state;
+  const { params } = state;
+  const source = state.display ?? state.source;
   const { image, placeholder, clip, shadow, border } = ensureChildren(group);
   const w = params.width;
   const h = params.height;
@@ -156,7 +167,7 @@ function layout(group: Konva.Group): void {
   } else {
     image.setAttrs({
       visible: true,
-      image: source,
+      image: source as CanvasImageSource as HTMLImageElement,
       x: params.flipX ? w - fitted.dest.x : fitted.dest.x,
       y: params.flipY ? h - fitted.dest.y : fitted.dest.y,
       scaleX: params.flipX ? -1 : 1,
@@ -207,9 +218,12 @@ export function updateSlot(group: Konva.Group, params: SlotParams, ctx: LayerRen
     state.source = undefined;
     if (id) {
       const st = state;
-      const work = ctx.resolveAsset(id).then((src) => {
+      const work = ctx.resolveAsset(id).then(async (src) => {
         if (st.assetId !== id) return; // superseded while loading
         st.source = src;
+        st.display = undefined;
+        st.displayKey = undefined;
+        await refreshAdjusted(group, st);
         layout(group);
       });
       ctx.track(work);
@@ -218,5 +232,52 @@ export function updateSlot(group: Konva.Group, params: SlotParams, ctx: LayerRen
       });
     }
   }
+  if (state.source) ctx.track(refreshAdjusted(group, state));
   layout(group);
+}
+
+/**
+ * Bring `state.display` in line with the wanted adjustment. Cached results
+ * apply immediately; otherwise edit mode renders after a short debounce (the
+ * previous look stays on screen meanwhile) and export renders right away at
+ * full resolution. Resolves once the right image is in place.
+ */
+function refreshAdjusted(group: Konva.Group, state: SlotState): Promise<void> {
+  const src = state.source;
+  const { adjust, mode } = state.params;
+  if (!src) return Promise.resolve();
+  if (!adjust || isNeutral(adjust)) {
+    clearTimeout(state.timer);
+    state.pendingKey = undefined;
+    state.display = undefined;
+    state.displayKey = undefined;
+    return Promise.resolve();
+  }
+  const maxEdge = mode === 'export' ? 1e6 : EDIT_MAX_EDGE;
+  const key = adjustCacheKey(adjust, maxEdge);
+  if (state.displayKey === key) return Promise.resolve();
+  const cached = getCachedAdjusted(src, key);
+  if (cached) {
+    clearTimeout(state.timer);
+    state.pendingKey = undefined;
+    state.display = cached;
+    state.displayKey = key;
+    return Promise.resolve();
+  }
+  if (state.pendingKey === key) return Promise.resolve();
+  clearTimeout(state.timer);
+  state.pendingKey = key;
+  return new Promise<void>((resolve) => {
+    state.timer = setTimeout(
+      () => {
+        if (state.pendingKey !== key || state.source !== src) return resolve();
+        state.pendingKey = undefined;
+        state.display = renderAdjusted(src, adjust, maxEdge);
+        state.displayKey = key;
+        layout(group);
+        resolve();
+      },
+      mode === 'export' ? 0 : 90,
+    );
+  });
 }

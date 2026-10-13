@@ -3,6 +3,7 @@
  * empty frame layers. Pure; the result is an ordinary batch of `addLayer`
  * ops, so it undoes/redoes through History like everything else.
  */
+import { neutralAdjust } from './adjust';
 import { batch, type CommandResult, type Op } from './commands';
 import { canvasSize, slideRects, type Rect } from './geometry';
 import { createId } from './id';
@@ -90,6 +91,8 @@ export function gridLayers(project: Project, args: GridArgs): FrameLayer[] {
         placeholderLabel: 'Drop photo',
         border: null,
         shadow: null,
+        adjust: neutralAdjust(),
+        preset: null,
       },
     } satisfies FrameLayer;
   });

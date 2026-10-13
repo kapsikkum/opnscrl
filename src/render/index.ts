@@ -1,5 +1,5 @@
 export { createRenderer } from './renderer';
-export type { Renderer, RendererOptions, RendererEvents, TransformEndEvent, LayerChange } from './renderer';
+export type { Renderer, RendererOptions, RendererEvents, TransformEndEvent, LayerChange, DrawTool } from './renderer';
 export { exportSlides, type ExportOptions } from './export';
 export { Reconciler } from './reconcile';
 export { createAssetCache } from './assets';
