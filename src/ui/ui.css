@@ -1088,3 +1088,50 @@ input.num {
     transition: none;
   }
 }
+
+/* on-canvas text editing */
+.text-edit-overlay {
+  position: fixed;
+  z-index: 30;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 1px dashed #2f7cf6;
+  outline-offset: 2px;
+  background: transparent;
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  transform-origin: 0 0;
+  caret-color: #2f7cf6;
+}
+
+/* layer drag-reorder */
+.layer-row { position: relative; }
+.drag-handle {
+  all: unset;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 32px;
+  color: var(--muted, #888);
+  cursor: grab;
+  touch-action: none;
+  border-radius: 6px;
+}
+.drag-handle:focus-visible { outline: 2px solid var(--accent); }
+.layer-list.dragging, .layer-list.dragging * { cursor: grabbing; user-select: none; }
+.layer-row.lifted { opacity: 0.55; }
+.layer-row.drop-before::before,
+.layer-row.drop-after::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.layer-row.drop-before::before { top: -2px; }
+.layer-row.drop-after::after { bottom: -2px; }

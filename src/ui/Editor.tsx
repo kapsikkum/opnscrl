@@ -24,6 +24,7 @@ import { ExportDialog } from './ExportDialog';
 import { GridDialog } from './GridDialog';
 import { Preview } from './Preview';
 import { ShareTemplateDialog } from './ShareTemplateDialog';
+import { TextEditOverlay } from './TextEditOverlay';
 import { showSafeArea, showSeams, snapping } from './viewSettings';
 
 type Tab = 'edit' | 'layers' | 'slides' | 'canvas';
@@ -51,6 +52,7 @@ export function Editor({ session }: { session: Session }) {
   const [modal, setModal] = useState<Modal>(null);
   const [shapeMenu, setShapeMenu] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [editingText, setEditingText] = useState<string | null>(null);
   const modalRef = useRef<Modal>(null);
   modalRef.current = modal;
 
@@ -80,10 +82,8 @@ export function Editor({ session }: { session: Session }) {
       if (!layer) return;
       editor.select([id]);
       setTab('edit');
-      setPanelOpen(true);
-      if (layer.type === 'text') {
-        setTimeout(() => document.querySelector<HTMLTextAreaElement>('textarea[data-field="text"]')?.focus(), 50);
-      }
+      if (layer.type === 'text') setEditingText(id);
+      else setPanelOpen(true);
     });
     const stops = [
       effect(() => renderer.setProject(editor.project.value)),
@@ -175,7 +175,7 @@ export function Editor({ session }: { session: Session }) {
 
   const tools: { id: string; label: string; icon: string; run: () => void }[] = [
     { id: 'photo', label: 'Photo', icon: 'photo', run: () => photoInput.current?.click() },
-    { id: 'text', label: 'Text', icon: 'type', run: () => addText(editor, addAt()) },
+    { id: 'text', label: 'Text', icon: 'type', run: () => setEditingText(addText(editor, addAt())) },
     { id: 'shape', label: 'Shape', icon: 'shape', run: () => setShapeMenu((v) => !v) },
     { id: 'line', label: 'Line', icon: 'line', run: () => addLine(editor, addAt()) },
     { id: 'frame', label: 'Frame', icon: 'frame', run: () => addFrame(editor, addAt()) },
@@ -258,6 +258,16 @@ export function Editor({ session }: { session: Session }) {
             }}
           />
           {importing ? <div class="busy-pill" role="status">Importing photos...</div> : null}
+          {editingText && rendererRef.current && hostRef.current ? (
+            <TextEditOverlay
+              key={editingText}
+              editor={editor}
+              renderer={rendererRef.current}
+              host={hostRef.current}
+              layerId={editingText}
+              onDone={() => setEditingText(null)}
+            />
+          ) : null}
         </main>
 
         <aside class={`panel${panelOpen ? ' open' : ''}`} aria-label="Properties">

@@ -30,12 +30,14 @@ function addAndSelect(editor: Editor, layer: Layer): void {
   editor.select([layer.id]);
 }
 
-export function addText(editor: Editor, slide: number): void {
+export function addText(editor: Editor, slide: number): string {
   const p = editor.project.peek();
   const b = slideBox(p, slide);
   const w = Math.round(b.width * 0.8);
   const pos = b.center(w, 110);
-  addAndSelect(editor, createLayer('text', { x: pos.x, y: Math.round(b.height / 2 - 55), width: w, props: { text: 'Your text', align: 'center' } }));
+  const layer = createLayer('text', { x: pos.x, y: Math.round(b.height / 2 - 55), width: w, props: { text: 'Your text', align: 'center' } });
+  addAndSelect(editor, layer);
+  return layer.id;
 }
 
 export function addShape(editor: Editor, slide: number, kind: 'rect' | 'ellipse'): void {

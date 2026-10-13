@@ -30,6 +30,16 @@ const PATHS: Record<string, JSX.Element> = {
     </>
   ),
   up: <path d="M6 14l6-6 6 6" />,
+  grip: (
+    <g fill="currentColor" stroke="none">
+      <circle cx="9" cy="6" r="1.6" />
+      <circle cx="15" cy="6" r="1.6" />
+      <circle cx="9" cy="12" r="1.6" />
+      <circle cx="15" cy="12" r="1.6" />
+      <circle cx="9" cy="18" r="1.6" />
+      <circle cx="15" cy="18" r="1.6" />
+    </g>
+  ),
   down: <path d="M6 10l6 6 6-6" />,
   left: <path d="M14 6l-6 6 6 6" />,
   right: <path d="M10 6l6 6-6 6" />,

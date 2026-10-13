@@ -69,6 +69,12 @@ export interface Renderer {
   setGuides(opts: Partial<GuideOptions>): void;
   /** The underlying Konva stage (escape hatch for tests and tooling). */
   readonly stage: Konva.Stage;
+  /** Hide the Konva text of a layer while an HTML editor overlays it (null = show again). */
+  setEditingText(id: string | null): void;
+  /** Where a layer's top-left corner is, relative to the container, plus zoom and rotation (degrees). */
+  getLayerScreenBox(id: string): { left: number; top: number; scale: number; rotation: number } | null;
+  /** Subscribe to viewport changes (pan/zoom/resize). */
+  onViewportChange(cb: () => void): () => void;
   destroy(): void;
 }
 
@@ -141,6 +147,19 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     activate: new Set(),
   };
   let snapping = true;
+  let editingId: string | null = null;
+  const viewportListeners = new Set<() => void>();
+  function syncEditingVisibility(): void {
+    for (const l of project?.layers ?? []) {
+      if (l.type !== 'text') continue;
+      const node = reconciler.getNode(l.id)?.findOne('.opnscrl-text');
+      node?.visible(l.id !== editingId);
+    }
+    // the selection box would show the pre-edit size; the overlay has its own outline
+    transformer.visible(!editingId);
+    contentLayer.batchDraw();
+    uiLayer.batchDraw();
+  }
   function emit<K extends keyof RendererEvents>(event: K, payload: RendererEvents[K]): void {
     for (const cb of [...listeners[event]]) cb(payload);
   }
@@ -220,6 +239,7 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     }
 
     reconciler.sync(next.layers);
+    if (editingId) syncEditingVisibility();
     pruneSelection();
     attachTransformer();
     contentLayer.batchDraw();
@@ -264,7 +284,7 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     pan = null;
   }
   stage.on('mousedown touchstart', (e) => {
-    if (pinching) return;
+    if (pinching || ((e.evt as TouchEvent).touches?.length ?? 0) > 1) return;
     const target = e.target;
     if (target === stage) {
       if (selection.length) userSelect([]);
@@ -513,6 +533,7 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     stage.scale({ x: scale, y: scale });
     stage.position({ x, y });
     stage.batchDraw();
+    for (const cb of [...viewportListeners]) cb();
   }
 
   function zoomToFit(): void {
@@ -580,14 +601,27 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
       zoomAround(center, stage.scaleX() * (dist / lastDist));
       stage.position({ x: stage.x() + (center.x - lastCenter.x), y: stage.y() + (center.y - lastCenter.y) });
       stage.batchDraw();
+      for (const cb of [...viewportListeners]) cb();
     }
     lastDist = dist;
     lastCenter = center;
   });
-  stage.on('touchend touchcancel', () => {
+  // A second finger turns any one-finger pan/drag into a pinch immediately.
+  stage.on('touchstart', (e) => {
+    if ((e.evt as TouchEvent).touches.length < 2) return;
+    pinching = true;
+    pan = null;
     lastDist = 0;
     lastCenter = null;
-    pinching = false;
+    for (const n of world.getChildren()) n.stopDrag();
+    transformer.stopTransform();
+  });
+  stage.on('touchend touchcancel', (e) => {
+    lastDist = 0;
+    lastCenter = null;
+    pan = null; // never resume a pan from a stale start point
+    // stay in pinch mode until every finger is up, so a lingering finger doesn't drag
+    if (!(e.evt as TouchEvent).touches?.length) pinching = false;
   });
 
   // ---- resize ----
@@ -600,6 +634,7 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
           stage.size({ width: w, height: h });
           if (fitMode) zoomToFit();
           else stage.batchDraw();
+          for (const cb of [...viewportListeners]) cb();
         })
       : null;
   ro?.observe(container);
@@ -628,8 +663,23 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
       const ids = new Set(project.layers.filter((l) => l.type === 'text').map((l) => l.id));
       if (!ids.size) return;
       reconciler.sync(project.layers, ids);
+      if (editingId) syncEditingVisibility();
       attachTransformer();
       contentLayer.batchDraw();
+    },
+    setEditingText(id) {
+      editingId = id;
+      syncEditingVisibility();
+    },
+    getLayerScreenBox(id) {
+      const node = reconciler.getNode(id);
+      if (!node) return null;
+      const abs = node.getAbsoluteTransform().point({ x: 0, y: 0 });
+      return { left: abs.x, top: abs.y, scale: node.getAbsoluteScale().x, rotation: node.getAbsoluteRotation() };
+    },
+    onViewportChange(cb) {
+      viewportListeners.add(cb);
+      return () => viewportListeners.delete(cb);
     },
     setSnapping(enabled) {
       snapping = enabled;
@@ -655,6 +705,7 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
       listeners.select.clear();
       listeners['transform-end'].clear();
       listeners.activate.clear();
+      viewportListeners.clear();
       reconciler.destroy();
       stage.destroy();
     },

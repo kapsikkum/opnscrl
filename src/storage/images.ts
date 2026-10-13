@@ -14,6 +14,17 @@ export interface PreparedImage {
   source?: ImageSource;
 }
 
+/** True for image/heic|heif or a .heic/.heif file name. */
+export function isHeicLike(type: string, name = ''): boolean {
+  return /^image\/hei[cf](-sequence)?$/i.test(type) || /\.hei[cf]$/i.test(name);
+}
+
+/** Convert HEIC/HEIF to JPEG. The decoder (libheif wasm) is only fetched when needed. */
+async function convertHeic(file: Blob): Promise<Blob> {
+  const { heicTo } = await import('heic-to');
+  return heicTo({ blob: file, type: 'image/jpeg', quality: 0.92 });
+}
+
 function sizeOf(src: CanvasImageSource & { width: number; height: number }): { w: number; h: number } {
   const s = src as { naturalWidth?: number; naturalHeight?: number; width: number; height: number };
   return { w: s.naturalWidth || s.width, h: s.naturalHeight || s.height };
@@ -29,7 +40,15 @@ export async function prepareImage(file: Blob, maxEdge = MAX_IMPORT_EDGE): Promi
   try {
     src = await decodeBlob(file);
   } catch {
-    throw new Error(`This browser can't read that image format (${file.type || 'unknown type'}).`);
+    if (!isHeicLike(file.type, (file as File).name ?? '')) {
+      throw new Error(`This browser can't read that image format (${file.type || 'unknown type'}).`);
+    }
+    try {
+      file = await convertHeic(file);
+      src = await decodeBlob(file);
+    } catch {
+      throw new Error("Couldn't convert this HEIC/HEIF photo. Try exporting it as JPEG first.");
+    }
   }
   const { w, h } = sizeOf(src as CanvasImageSource & { width: number; height: number });
   if (!w || !h) throw new Error('The image is empty.');

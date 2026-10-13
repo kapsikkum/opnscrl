@@ -56,6 +56,9 @@ export default defineConfig({
     }),
   ],
   build: {
+    // heic-to (libheif wasm, ~3 MB) is a lazy chunk fetched only when a HEIC photo is imported;
+    // it is deliberately left out of the PWA precache.
+    chunkSizeWarningLimit: 3300,
     rollupOptions: {
       output: {
         manualChunks(id: string) {

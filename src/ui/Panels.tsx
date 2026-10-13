@@ -1,4 +1,5 @@
-import { useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
+import { gapAt, reorderTarget } from '../core/reorder';
 import {
   addSlideAt,
   deleteLayer,
@@ -26,17 +27,57 @@ import { showSafeArea, showSeams, snapping } from './viewSettings';
 export function LayerPanel({ session }: { session: Session }) {
   const { editor } = session;
   const [renaming, setRenaming] = useState<string | null>(null);
+  const [drag, setDrag] = useState<{ id: string; gap: number } | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const mids = useRef<number[]>([]);
   const layers = editor.project.value.layers;
   const selection = editor.selection.value;
   const rows = [...layers].reverse(); // front-most first, like most editors
   if (!layers.length) return <p class="panel-pad muted">No layers yet. Add a photo, text or shape from the toolbar.</p>;
+
+  // Pointer-driven drag (mouse + touch): the handle captures the pointer, the
+  // drop gap comes from the rows' vertical midpoints, one reorder op on release.
+  const startDrag = (e: PointerEvent, id: string) => {
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    const items = [...(listRef.current?.children ?? [])] as HTMLElement[];
+    mids.current = items.map((el) => {
+      const r = el.getBoundingClientRect();
+      return r.top + r.height / 2;
+    });
+    setDrag({ id, gap: gapAt(e.clientY, mids.current) });
+  };
+  const moveDrag = (e: PointerEvent) => {
+    if (!drag) return;
+    const gap = gapAt(e.clientY, mids.current);
+    if (gap !== drag.gap) setDrag({ ...drag, gap });
+  };
+  const endDrag = (cancel: boolean) => {
+    if (!drag) return;
+    const from = layers.findIndex((l) => l.id === drag.id);
+    const to = cancel ? null : reorderTarget(layers.length, from, drag.gap);
+    if (to !== null) editor.dispatch({ op: 'reorder', id: drag.id, toIndex: to });
+    setDrag(null);
+  };
   return (
-    <ul class="layer-list" aria-label="Layers">
-      {rows.map((l) => {
+    <ul class={`layer-list${drag ? ' dragging' : ''}`} aria-label="Layers" ref={listRef}>
+      {rows.map((l, row) => {
         const def = getLayerDefinition(l.type);
         const on = selection.includes(l.id);
+        const dropCls = drag && drag.gap === row ? ' drop-before' : drag && row === rows.length - 1 && drag.gap === rows.length ? ' drop-after' : '';
         return (
-          <li key={l.id} class={`layer-row${on ? ' on' : ''}${l.hidden ? ' dim' : ''}`}>
+          <li key={l.id} class={`layer-row${on ? ' on' : ''}${l.hidden ? ' dim' : ''}${drag?.id === l.id ? ' lifted' : ''}${dropCls}`}>
+            <button
+              class="drag-handle"
+              aria-label={`Drag to reorder ${l.name}`}
+              title="Drag to reorder"
+              onPointerDown={(e) => startDrag(e, l.id)}
+              onPointerMove={moveDrag}
+              onPointerUp={() => endDrag(false)}
+              onPointerCancel={() => endDrag(true)}
+            >
+              <Icon name="grip" size={16} />
+            </button>
             <button
               class="layer-main"
               aria-pressed={on}
