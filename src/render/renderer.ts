@@ -7,7 +7,15 @@ import { createAssetCache } from './assets';
 import { createCanvasBackground, updateCanvasBackground } from './canvasBackground';
 import { defaultGuides, rebuildGuides, type GuideOptions } from './guides';
 import { Reconciler } from './reconcile';
-import { collectSnapTargets, snapRect, unionRects, type Guide, type SnapTargets } from './snap';
+import {
+  collectSnapTargets,
+  snapRect,
+  snapResizeBox,
+  unionRects,
+  type Guide,
+  type ResizeAnchor,
+  type SnapTargets,
+} from './snap';
 
 export interface RendererOptions {
   /** Injected asset lookup; the renderer memoizes it per asset id. */
@@ -66,6 +74,7 @@ export interface Renderer {
 
 /** Snap tolerance in screen pixels. */
 const SNAP_PX = 8;
+type KonvaBox = Parameters<NonNullable<Konva.TransformerConfig['boundBoxFunc']>>[0];
 const MIN_ZOOM = 0.02;
 const MAX_ZOOM = 4;
 const r2 = (v: number) => Math.round(v * 100) / 100;
@@ -113,7 +122,7 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     borderStroke: '#2f7cf6',
     rotationSnaps: [0, 45, 90, 135, 180, 225, 270, 315],
     rotationSnapTolerance: 4,
-    boundBoxFunc: (oldBox, newBox) => (newBox.width < 8 || newBox.height < 8 ? oldBox : newBox),
+    boundBoxFunc: (oldBox, newBox) => resizeBound(oldBox, newBox),
   });
   const snapGroup = new Konva.Group({ listening: false });
   uiLayer.add(guidesGroup, snapGroup, transformer);
@@ -313,23 +322,26 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
       if (n) dragStart.set(id, { x: n.x(), y: n.y() });
     }
     dragBounds = unionRects([...dragStart.keys()].map((id) => reconciler.getNode(id)).filter((n): n is Konva.Group => !!n).map(nodeBounds));
-    snapTargets = null;
-    if (project && dragBounds) {
-      const others: Rect[] = [];
-      for (const l of project.layers) {
-        if (dragStart.has(l.id) || l.hidden || l.type === 'background') continue;
-        const n = reconciler.getNode(l.id);
-        if (n) others.push(nodeBounds(n));
-      }
-      snapTargets = collectSnapTargets(project.canvas, others);
-    }
+    snapTargets = dragBounds ? targetsExcluding(new Set(dragStart.keys())) : null;
   });
+
+  /** Slide/canvas lines plus the bounds of every visible layer not in `moving`. */
+  function targetsExcluding(moving: ReadonlySet<string>): SnapTargets | null {
+    if (!project) return null;
+    const others: Rect[] = [];
+    for (const l of project.layers) {
+      if (moving.has(l.id) || l.hidden || l.type === 'background') continue;
+      const n = reconciler.getNode(l.id);
+      if (n) others.push(nodeBounds(n));
+    }
+    return collectSnapTargets(project.canvas, others);
+  }
   world.on('dragmove', (e) => {
     const start = dragAnchor && dragStart.get(dragAnchor.id());
     if (!dragAnchor || !start || e.target !== dragAnchor) return;
     let dx = dragAnchor.x() - start.x;
     let dy = dragAnchor.y() - start.y;
-    const alt = !!(e.evt as MouseEvent | undefined)?.altKey;
+    const alt = !!(e.evt as MouseEvent | undefined)?.altKey || altDown;
     if (snapping && !alt && snapTargets && dragBounds) {
       const moved: Rect = { ...dragBounds, x: dragBounds.x + dx, y: dragBounds.y + dy };
       const r = snapRect(moved, snapTargets, SNAP_PX / stage.scaleX());
@@ -360,27 +372,120 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     commit('drag', changes);
   });
 
-  // ---- interaction: transform ----
+  // ---- interaction: transform (live re-render + resize snapping) ----
+  // Alt disables snapping; boundBoxFunc gets no event, so track the key here.
+  let altDown = false;
+  const onKey = (e: KeyboardEvent) => {
+    altDown = e.altKey;
+  };
+  const onBlur = () => {
+    altDown = false;
+  };
+  window.addEventListener('keydown', onKey);
+  window.addEventListener('keyup', onKey);
+  window.addEventListener('blur', onBlur);
+
+  /** Transient layers holding each node's live geometry during a gesture (never written to the model). */
+  let live = new Map<string, Layer>();
+  let resizeTargets: SnapTargets | null = null;
+
+  const MIN_BOX_PX = 8;
+  function resizeBound(oldBox: KonvaBox, newBox: KonvaBox): KonvaBox {
+    if (newBox.width < MIN_BOX_PX || newBox.height < MIN_BOX_PX) return oldBox;
+    const anchor = transformer.getActiveAnchor() as ResizeAnchor | 'rotater' | null;
+    const axisAligned = Math.abs(Math.sin(newBox.rotation)) < 1e-4 && Math.cos(newBox.rotation) > 0;
+    if (!anchor || anchor === 'rotater' || !axisAligned || !snapping || altDown || !resizeTargets) {
+      clearSnapGuides();
+      return newBox;
+    }
+    // Transformer boxes are in stage (screen) space; snapping works in model px.
+    const s = stage.scaleX();
+    const toModel = (b: KonvaBox): Rect => ({
+      x: (b.x - stage.x()) / s,
+      y: (b.y - stage.y()) / s,
+      width: b.width / s,
+      height: b.height / s,
+    });
+    const r = snapResizeBox(
+      toModel(newBox),
+      anchor,
+      resizeTargets,
+      SNAP_PX / s,
+      transformer.keepRatio(),
+      MIN_BOX_PX / s,
+    );
+    showSnapGuides(r.guides);
+    return {
+      ...newBox,
+      x: r.rect.x * s + stage.x(),
+      y: r.rect.y * s + stage.y(),
+      width: r.rect.width * s,
+      height: r.rect.height * s,
+    };
+  }
+
+  transformer.on('transformstart', () => {
+    live = new Map();
+    for (const n of transformer.nodes()) {
+      const layer = layerById.get(n.id());
+      if (layer) live.set(layer.id, layer);
+    }
+    resizeTargets = targetsExcluding(new Set(live.keys()));
+  });
+
+  // Bake the transformer's scale into width/height every frame and re-render
+  // through the layer definition, so crops, radii, borders and text wrap
+  // update while resizing instead of stretching until release.
+  transformer.on('transform', () => {
+    for (const n of transformer.nodes()) {
+      const prev = live.get(n.id());
+      if (!prev) continue;
+      const sx = n.scaleX();
+      const sy = n.scaleY();
+      const next = {
+        ...prev,
+        x: n.x(),
+        y: n.y(),
+        rotation: n.rotation(),
+        width: Math.max(1, prev.width * sx),
+        height: Math.max(1, n.height() * sy),
+      } as Layer;
+      if (next.type === 'text' && Math.abs(sx - 1) > 1e-3 && Math.abs(sx - sy) < 1e-3) {
+        // corner drag on text scales the type, side drag only changes the wrap width
+        next.props = { ...next.props, fontSize: Math.max(1, next.props.fontSize * sx) };
+      }
+      if (reconciler.preview(next.id, next)) {
+        live.set(next.id, next);
+      }
+      // (if a type cannot update in place it keeps scaling and is baked at transformend)
+    }
+    contentLayer.batchDraw();
+  });
+
   transformer.on('transformend', () => {
+    clearSnapGuides();
+    resizeTargets = null;
     const changes: LayerChange[] = [];
     for (const n of transformer.nodes()) {
       const layer = layerById.get(n.id());
-      if (!layer) continue;
+      const cur = live.get(n.id());
+      if (!layer || !cur) continue;
+      // nodes that previewed have scale 1; any leftover scale is baked here
       const sx = n.scaleX();
       const sy = n.scaleY();
       const patch: LayerPatch = {
         x: r2(n.x()),
         y: r2(n.y()),
         rotation: r2(normalizeAngle(n.rotation())),
-        width: Math.max(1, r2(layer.width * sx)),
+        width: Math.max(1, r2(cur.width * sx)),
         height: Math.max(1, r2(n.height() * sy)),
       };
-      if (layer.type === 'text' && Math.abs(sx - 1) > 1e-3 && Math.abs(sx - sy) < 1e-3) {
-        // corner drag on text scales the type, side drag only changes the wrap width
-        patch.props = { fontSize: r2(layer.props.fontSize * sx) };
+      if (layer.type === 'text' && cur.type === 'text' && cur.props.fontSize !== layer.props.fontSize) {
+        patch.props = { fontSize: r2(cur.props.fontSize) };
       }
       changes.push({ id: layer.id, patch });
     }
+    live = new Map();
     commit('transform', changes);
   });
 
@@ -541,6 +646,9 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     },
     destroy() {
       ro?.disconnect();
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keyup', onKey);
+      window.removeEventListener('blur', onBlur);
       window.removeEventListener('mouseup', endPan);
       window.removeEventListener('touchend', endPan);
       window.removeEventListener('touchcancel', endPan);

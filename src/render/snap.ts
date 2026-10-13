@@ -1,5 +1,5 @@
 /**
- * Pure snapping math for drag interactions (no Konva, no DOM).
+ * Pure snapping math for drag and resize interactions (no Konva, no DOM).
  *
  * A moving rectangle has three anchors per axis (start, center, end). Each
  * anchor snaps to the nearest target line within `threshold`; targets are
@@ -125,9 +125,13 @@ export function snapRect(rect: Rect, targets: SnapTargets, threshold: number): S
   const dx = dxRaw ?? 0;
   const dy = dyRaw ?? 0;
   const moved: Rect = { x: rect.x + dx, y: rect.y + dy, width: rect.width, height: rect.height };
+  return { dx, dy, guides: guidesFor(moved, targets, dxRaw !== null, dyRaw !== null), snappedX: dxRaw !== null, snappedY: dyRaw !== null };
+}
 
+/** Guide lines for every target line that one of `moved`'s anchors (edges/center) now sits on. */
+function guidesFor(moved: Rect, targets: SnapTargets, onX: boolean, onY: boolean): Guide[] {
   const guides: Guide[] = [];
-  if (dxRaw !== null) {
+  if (onX) {
     const anchors = [moved.x, moved.x + moved.width / 2, moved.x + moved.width];
     const byPos = new Map<number, Guide>();
     for (const t of targets.x) {
@@ -140,7 +144,7 @@ export function snapRect(rect: Rect, targets: SnapTargets, threshold: number): S
     }
     guides.push(...byPos.values());
   }
-  if (dyRaw !== null) {
+  if (onY) {
     const anchors = [moved.y, moved.y + moved.height / 2, moved.y + moved.height];
     const byPos = new Map<number, Guide>();
     for (const t of targets.y) {
@@ -153,5 +157,83 @@ export function snapRect(rect: Rect, targets: SnapTargets, threshold: number): S
     }
     guides.push(...byPos.values());
   }
-  return { dx, dy, guides, snappedX: dxRaw !== null, snappedY: dyRaw !== null };
+  return guides;
+}
+
+/** Konva Transformer anchor names (the rotater never resizes). */
+export type ResizeAnchor =
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'middle-left'
+  | 'middle-right'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right';
+
+export interface ResizeSnapResult {
+  rect: Rect;
+  guides: Guide[];
+}
+
+/**
+ * Snap a box being resized from `anchor`: only the edges that anchor moves
+ * snap (the opposite edges stay put). With `keepRatio` on a corner anchor the
+ * axis needing the smaller correction snaps and the other dimension follows
+ * the box's aspect ratio. Returns the input rect unchanged when nothing is in
+ * range. `minSize` keeps snapping from collapsing the box.
+ */
+export function snapResizeBox(
+  rect: Rect,
+  anchor: ResizeAnchor,
+  targets: SnapTargets,
+  threshold: number,
+  keepRatio: boolean,
+  minSize = 1,
+): ResizeSnapResult {
+  const left = anchor.endsWith('left');
+  const right = anchor.endsWith('right');
+  const top = anchor.startsWith('top');
+  const bottom = anchor.startsWith('bottom');
+  const corner = (left || right) && (top || bottom);
+
+  const xEdge = left ? rect.x : right ? rect.x + rect.width : null;
+  const yEdge = top ? rect.y : bottom ? rect.y + rect.height : null;
+  let dx = xEdge === null ? null : bestDelta([xEdge], targets.x, threshold);
+  let dy = yEdge === null ? null : bestDelta([yEdge], targets.y, threshold);
+  if (dx === null && dy === null) return { rect, guides: [] };
+
+  let { x, y, width, height } = rect;
+  if (keepRatio && corner && rect.height > 0) {
+    const ratio = rect.width / rect.height;
+    // snap the axis that needs the smaller correction; the other follows the ratio
+    const useX = dx !== null && (dy === null || Math.abs(dx) <= Math.abs(dy));
+    if (useX) {
+      width = left ? rect.width - dx! : rect.width + dx!;
+      height = width / ratio;
+      dy = null;
+    } else {
+      height = top ? rect.height - dy! : rect.height + dy!;
+      width = height * ratio;
+      dx = null;
+    }
+    if (left) x = rect.x + rect.width - width;
+    if (top) y = rect.y + rect.height - height;
+  } else {
+    if (dx !== null) {
+      if (left) {
+        x = rect.x + dx;
+        width = rect.width - dx;
+      } else width = rect.width + dx;
+    }
+    if (dy !== null) {
+      if (top) {
+        y = rect.y + dy;
+        height = rect.height - dy;
+      } else height = rect.height + dy;
+    }
+  }
+  if (width < minSize || height < minSize) return { rect, guides: [] };
+  const out: Rect = { x, y, width, height };
+  return { rect: out, guides: guidesFor(out, targets, dx !== null, dy !== null) };
 }

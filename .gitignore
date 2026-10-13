@@ -3,3 +3,4 @@ dist
 *.apk
 *.local
 .DS_Store
+.claude/

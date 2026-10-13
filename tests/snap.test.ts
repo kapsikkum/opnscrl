@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { collectSnapTargets, rectTargets, slideTargets, snapRect, unionRects } from '../src/render/snap';
+import { collectSnapTargets, rectTargets, slideTargets, snapRect, snapResizeBox, unionRects } from '../src/render/snap';
 
 const canvas = { slideCount: 3, aspect: '4:5' as const, slideWidthPx: 1080 }; // 3240 x 1350
 
@@ -85,5 +85,48 @@ describe('snapRect', () => {
   it('snaps right edge to the canvas end', () => {
     const r = snapRect({ x: 3200, y: 10, width: 36, height: 10 }, targets, 6);
     expect(r.dx).toBe(4);
+  });
+});
+
+describe('snapResizeBox', () => {
+  const targets = slideTargets(canvas); // x lines every 540, y lines 0/675/1350
+
+  it('snaps only the moving edge of a side anchor', () => {
+    const r = snapResizeBox({ x: 100, y: 100, width: 975, height: 300 }, 'middle-right', targets, 8, false);
+    expect(r.rect).toEqual({ x: 100, y: 100, width: 980, height: 300 }); // right edge 1075 -> 1080
+    expect(r.guides).toContainEqual(expect.objectContaining({ orientation: 'v', pos: 1080 }));
+  });
+
+  it('moves x and shrinks width when the left edge snaps', () => {
+    const r = snapResizeBox({ x: 545, y: 100, width: 300, height: 300 }, 'middle-left', targets, 8, false);
+    expect(r.rect).toEqual({ x: 540, y: 100, width: 305, height: 300 });
+  });
+
+  it('ignores edges the anchor does not move', () => {
+    // left edge is at 541 (near 540) but the bottom anchor only moves the bottom edge
+    const r = snapResizeBox({ x: 541, y: 100, width: 300, height: 572 }, 'bottom-center', targets, 8, false);
+    expect(r.rect).toEqual({ x: 541, y: 100, width: 300, height: 575 }); // bottom 672 -> 675
+  });
+
+  it('keeps the aspect ratio on corner anchors, anchored at the opposite corner', () => {
+    // bottom-right corner at (1076, 410): x within 4 of 1080, y not near any line
+    const r = snapResizeBox({ x: 76, y: 10, width: 1000, height: 400 }, 'bottom-right', targets, 8, true);
+    expect(r.rect.x).toBe(76);
+    expect(r.rect.y).toBe(10);
+    expect(r.rect.width).toBeCloseTo(1004);
+    expect(r.rect.height).toBeCloseTo(401.6);
+  });
+
+  it('keepRatio top-left keeps the bottom-right corner fixed', () => {
+    const r = snapResizeBox({ x: 543, y: 300, width: 400, height: 200 }, 'top-left', targets, 8, true);
+    expect(r.rect.x).toBe(540);
+    expect(r.rect.x + r.rect.width).toBeCloseTo(943);
+    expect(r.rect.y + r.rect.height).toBeCloseTo(500);
+    expect(r.rect.width / r.rect.height).toBeCloseTo(2);
+  });
+
+  it('returns the box unchanged when nothing is in range', () => {
+    const box = { x: 100, y: 100, width: 300, height: 300 };
+    expect(snapResizeBox(box, 'bottom-right', targets, 8, false)).toEqual({ rect: box, guides: [] });
   });
 });

@@ -65,6 +65,18 @@ export class Reconciler {
     return structural;
   }
 
+  /**
+   * Re-render a node from a transient layer (e.g. live geometry mid-resize)
+   * without recording it: the next sync() compares against the last synced
+   * layer, so the model stays the source of truth. Returns false if the layer
+   * type cannot update in place.
+   */
+  preview(id: string, layer: Layer): boolean {
+    const entry = this.entries.get(id);
+    if (!entry || entry.layer.type !== layer.type) return false;
+    return updateLayerNode(entry.node, layer, this.ctx);
+  }
+
   getNode(id: string): Konva.Group | undefined {
     return this.entries.get(id)?.node;
   }
