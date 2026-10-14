@@ -1,5 +1,6 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SCHEMA_VERSION } from '../src/core/schema';
 import { createProject } from '../src/core/project';
 import type { Project } from '../src/core/types';
 import { createLayer } from '../src/layers/registry';
@@ -74,7 +75,7 @@ describe('projects store', () => {
     delete v1.canvas.customHeightPx;
     await db.put('projects', v1);
     const loaded = await loadProject('old');
-    expect(loaded?.schemaVersion).toBe(3);
+    expect(loaded?.schemaVersion).toBe(SCHEMA_VERSION);
     expect(loaded?.canvas.customHeightPx).toBe(1350);
   });
 

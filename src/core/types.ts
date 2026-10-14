@@ -28,6 +28,7 @@ import type {
   drawingLayerSchema,
   drawingPropsSchema,
   strokeSchema,
+  textBackgroundSchema,
 } from './schema';
 
 export type Aspect = z.infer<typeof aspectSchema>;
@@ -50,6 +51,7 @@ export type AdjustKey = keyof Adjust;
 export type StickerProps = z.infer<typeof stickerPropsSchema>;
 export type DrawingProps = z.infer<typeof drawingPropsSchema>;
 export type Stroke = z.infer<typeof strokeSchema>;
+export type TextBackground = z.infer<typeof textBackgroundSchema>;
 
 export type ImageLayer = z.infer<typeof imageLayerSchema>;
 export type TextLayer = z.infer<typeof textLayerSchema>;

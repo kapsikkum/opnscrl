@@ -3,20 +3,19 @@
  * (converted locally from third-party templates and never committed), so this
  * suite skips itself when the folder is absent, e.g. in CI.
  */
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { canvasSize, layerBounds } from '../src/core/geometry';
 import { serializeProject, parseProject } from '../src/core/serialize';
 import { decodeShareLink, decodeTemplateFile, encodeShareLink, encodeTemplateFile, projectToTemplate, templateToProject } from '../src/templates';
 
-const dir = join(__dirname, '..', 'fixtures', 'scrl');
-const files = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.opnscrl.json')) : [];
+// Vite resolves the glob at build time; an absent folder simply yields no files.
+const fixtures = import.meta.glob('../fixtures/scrl/*.opnscrl.json', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+const files = Object.keys(fixtures);
 
 describe.skipIf(files.length === 0)('external template fixtures', () => {
   for (const f of files) {
     describe(f, () => {
-      const text = readFileSync(join(dir, f), 'utf-8');
+      const text = fixtures[f]!;
 
       it('decodes as a valid template', () => {
         const t = decodeTemplateFile(text);

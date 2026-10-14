@@ -110,24 +110,39 @@ function layerSvg(l: Layer, defs: JSX.Element[]): JSX.Element | null {
       );
     case 'text': {
       const p = l.props;
+      const bg = p.background;
+      const box = bg ? (
+        <rect
+          x={-bg.paddingX}
+          y={-bg.paddingY}
+          width={l.width + bg.paddingX * 2}
+          height={Math.max(l.height, p.fontSize * p.lineHeight) + bg.paddingY * 2}
+          rx={Math.min(bg.radius, (Math.max(l.height, p.fontSize * p.lineHeight) + bg.paddingY * 2) / 2)}
+          fill={bg.color}
+          fill-opacity={bg.opacity}
+        />
+      ) : null;
       return (
-        <foreignObject transform={tf} width={l.width} height={Math.max(l.height, p.fontSize * p.lineHeight)} opacity={l.opacity} style="overflow:visible">
-          <div
-            // @ts-expect-error xmlns is valid on an HTML element inside foreignObject
-            xmlns="http://www.w3.org/1999/xhtml"
-            style={{
-              width: `${l.width}px`,
-              font: `${p.fontWeight} ${p.fontSize}px/${p.lineHeight} ${p.fontFamily}`,
-              color: p.color,
-              textAlign: p.align,
-              letterSpacing: `${p.letterSpacing}px`,
-              whiteSpace: 'pre-wrap',
-              overflowWrap: 'break-word',
-            }}
-          >
-            {p.text}
-          </div>
-        </foreignObject>
+        <g transform={tf} opacity={l.opacity}>
+          {box}
+          <foreignObject width={l.width} height={Math.max(l.height, p.fontSize * p.lineHeight)} style="overflow:visible">
+            <div
+              // @ts-expect-error xmlns is valid on an HTML element inside foreignObject
+              xmlns="http://www.w3.org/1999/xhtml"
+              style={{
+                width: `${l.width}px`,
+                font: `${p.fontWeight} ${p.fontSize}px/${p.lineHeight} ${p.fontFamily}`,
+                color: p.color,
+                textAlign: p.align,
+                letterSpacing: `${p.letterSpacing}px`,
+                whiteSpace: 'pre-wrap',
+                overflowWrap: 'break-word',
+              }}
+            >
+              {p.text}
+            </div>
+          </foreignObject>
+        </g>
       );
     }
   }

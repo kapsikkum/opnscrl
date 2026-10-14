@@ -1,4 +1,5 @@
 import { compressToEncodedURIComponent } from 'lz-string';
+import { SCHEMA_VERSION } from '../src/core/schema';
 import { describe, expect, it } from 'vitest';
 import { createProject } from '../src/core/project';
 import { parseProject } from '../src/core/serialize';
@@ -47,7 +48,7 @@ function sampleProject(): Project {
 describe('projectToTemplate', () => {
   it('turns photos into empty frames and strips asset references', () => {
     const t = projectToTemplate(sampleProject(), { name: 'My look', tags: ['a'], now: 1, id: 'tpl_x' });
-    expect(t).toMatchObject({ id: 'tpl_x', name: 'My look', tags: ['a'], createdAt: 1, schemaVersion: 3 });
+    expect(t).toMatchObject({ id: 'tpl_x', name: 'My look', tags: ['a'], createdAt: 1, schemaVersion: SCHEMA_VERSION });
     expect(t.assets).toBeUndefined();
     const img = t.layers.find((l) => l.id === 'img1')!;
     expect(img.type).toBe('frame');
@@ -170,7 +171,7 @@ describe('template file codec', () => {
       }
     }
     const decoded = decodeTemplateFile(JSON.stringify(old));
-    expect(decoded.schemaVersion).toBe(3);
+    expect(decoded.schemaVersion).toBe(SCHEMA_VERSION);
     expect(decoded.canvas.customHeightPx).toBe(1350);
     expect(decoded.layers.find((l) => l.type === 'frame')!.props).toMatchObject({ border: null, shadow: null });
   });

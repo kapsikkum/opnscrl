@@ -5,6 +5,7 @@ import { applyBase, createLayerGroup } from '../shared/base';
 import type { LayerDefinition } from '../types';
 
 const TEXT_NAME = 'opnscrl-text';
+const BG_NAME = 'opnscrl-text-bg';
 
 function apply(group: Konva.Group, layer: TextLayer): void {
   let node = group.findOne<Konva.Text>(`.${TEXT_NAME}`);
@@ -37,6 +38,31 @@ function apply(group: Konva.Group, layer: TextLayer): void {
   // never let text vanish: fall back to no wrapping in that case.
   node.wrap('word');
   if (p.text.trim() && node.textArr.length === 0) node.wrap('none');
+  // Background box: hugs the widest line (not the whole wrap width) plus padding.
+  let bg = group.findOne<Konva.Rect>(`.${BG_NAME}`);
+  if (p.background) {
+    if (!bg) {
+      bg = new Konva.Rect({ name: BG_NAME, listening: false });
+      group.add(bg);
+    }
+    const lines = node.textArr as { width: number }[];
+    const textW = Math.min(layer.width, Math.max(0, ...lines.map((l) => l.width)));
+    const x0 = p.align === 'center' ? (layer.width - textW) / 2 : p.align === 'right' ? layer.width - textW : 0;
+    const { paddingX: px, paddingY: py } = p.background;
+    bg.setAttrs({
+      x: x0 - px,
+      y: -py,
+      width: textW + px * 2,
+      height: node.height() + py * 2,
+      cornerRadius: p.background.radius,
+      fill: p.background.color,
+      opacity: p.background.opacity,
+    });
+    bg.moveToBottom();
+    group.findOne('.opnscrl-hit')?.moveToBottom();
+  } else {
+    bg?.destroy();
+  }
   // Selection bounds follow the measured text height, not the stored one.
   applyBase(group, layer, node.height());
 }
@@ -61,6 +87,7 @@ export const textLayer: LayerDefinition<'text'> = {
     letterSpacing: 0,
     stroke: null,
     shadow: null,
+    background: null,
   }),
   base: { width: 800, height: 110 },
   inspector: [
@@ -102,6 +129,19 @@ export const textLayer: LayerDefinition<'text'> = {
       fields: [
         { key: 'width', label: 'Width', kind: 'slider', min: 1, max: 40, step: 1, unit: 'px' },
         { key: 'color', label: 'Color', kind: 'color' },
+      ],
+    },
+    {
+      key: 'background',
+      label: 'Background',
+      kind: 'group',
+      initial: { color: '#ffffff', opacity: 1, paddingX: 28, paddingY: 14, radius: 999 },
+      fields: [
+        { key: 'color', label: 'Color', kind: 'color' },
+        { key: 'opacity', label: 'Opacity', kind: 'slider', min: 0, max: 1, step: 0.01 },
+        { key: 'paddingX', label: 'Padding X', kind: 'slider', min: 0, max: 200, step: 1, unit: 'px' },
+        { key: 'paddingY', label: 'Padding Y', kind: 'slider', min: 0, max: 200, step: 1, unit: 'px' },
+        { key: 'radius', label: 'Corner radius', kind: 'slider', min: 0, max: 400, step: 1, unit: 'px' },
       ],
     },
     {

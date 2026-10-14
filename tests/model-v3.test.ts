@@ -1,3 +1,4 @@
+import { SCHEMA_VERSION } from '../src/core/schema';
 import { describe, expect, it } from 'vitest';
 import { applyAdjust, effectiveAdjust, isNeutral, neutralAdjust, PRESETS } from '../src/core/adjust';
 import { normalizePoints, simplifyPoints, strokesHitByPath, toLocal } from '../src/core/drawing';
@@ -98,7 +99,7 @@ describe('migration v2 -> v3', () => {
       updatedAt: 1,
     };
     const p = parseProject(migrateDocument(v2));
-    expect(p.schemaVersion).toBe(3);
+    expect(p.schemaVersion).toBe(SCHEMA_VERSION);
     for (const l of p.layers) {
       if (l.type !== 'image' && l.type !== 'frame') throw new Error('unexpected');
       expect(l.props.adjust).toEqual(neutralAdjust());

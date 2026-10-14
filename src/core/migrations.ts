@@ -75,6 +75,14 @@ migrations[2] = (doc) => {
   return { ...doc, layers };
 };
 
+/** v3 -> v4: text layers gain an optional `background` box (null). */
+migrations[3] = (doc) => {
+  const layers = Array.isArray(doc.layers)
+    ? doc.layers.map((l) => (isObj(l) && l.type === 'text' && isObj(l.props) ? { ...l, props: { background: null, ...l.props } } : l))
+    : doc.layers;
+  return { ...doc, layers };
+};
+
 export function detectVersion(doc: RawDoc): number {
   const v = doc.schemaVersion;
   return typeof v === 'number' && Number.isInteger(v) && v >= 0 ? v : 0;

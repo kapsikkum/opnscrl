@@ -108,7 +108,7 @@ describe('migration v1 -> v2', () => {
 
   it('adds customHeightPx, border and shadow without touching existing values', () => {
     const p = parseProject(v1Doc());
-    expect(p.schemaVersion).toBe(3);
+    expect(p.schemaVersion).toBe(SCHEMA_VERSION);
     expect(p.canvas.customHeightPx).toBe(1350);
     expect(p.canvas.aspect).toBe('4:5');
     const [img, frm, shp] = p.layers;
@@ -120,7 +120,7 @@ describe('migration v1 -> v2', () => {
   it('migrates v0 documents all the way to v2', () => {
     const v0 = { ...v1Doc(), schemaVersion: undefined, canvas: { slides: 2, ratio: '1:1', slideWidthPx: 1080, background: { kind: 'solid', color: '#fff' } } };
     const p = parseProject(v0);
-    expect(p.schemaVersion).toBe(3);
+    expect(p.schemaVersion).toBe(SCHEMA_VERSION);
     expect(p.canvas.slideCount).toBe(2);
     expect(p.canvas.customHeightPx).toBe(1350);
   });

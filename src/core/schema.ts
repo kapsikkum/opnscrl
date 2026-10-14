@@ -8,7 +8,7 @@
  */
 import { z } from 'zod';
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export const ASPECTS = ['4:5', '1:1', '9:16', '3:4', '16:9', '2:3', '4:3', '1.91:1', 'custom'] as const;
 export const aspectSchema = z.enum(ASPECTS);
@@ -116,6 +116,15 @@ export const textShadowSchema = z.object({
   opacity: z.number().min(0).max(1),
 });
 
+/** A box behind the text (labels, pills, highlights). Padding is in canvas px around the text. */
+export const textBackgroundSchema = z.object({
+  color,
+  opacity: z.number().min(0).max(1),
+  paddingX: z.number().min(0),
+  paddingY: z.number().min(0),
+  radius: z.number().min(0),
+});
+
 export const textPropsSchema = z.object({
   text: z.string(),
   fontFamily: z.string(),
@@ -127,6 +136,7 @@ export const textPropsSchema = z.object({
   letterSpacing: z.number(),
   stroke: textStrokeSchema.nullable(),
   shadow: textShadowSchema.nullable(),
+  background: textBackgroundSchema.nullable(),
 });
 
 export const shapePropsSchema = z.object({
