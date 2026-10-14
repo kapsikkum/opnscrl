@@ -7,6 +7,7 @@ import type { Op } from '../core/commands';
 import { slideRects } from '../core/geometry';
 import { createGridOps, relayoutOps, ungroupOps, type GridArgs } from '../core/grid';
 import { gridFrameIds, syncGridArea } from '../core/gridGroup';
+import { toLocal } from '../core/drawing';
 import { createId } from '../core/id';
 import { insertSlideOps, layerSlideIndex, layersOnSlide, moveSlideOps, removeSlideOps } from '../core/slides';
 import type { CanvasSettings, Fill, GridGroup, Layer, LayerPatch, Project } from '../core/types';
@@ -151,20 +152,35 @@ function isEmptyFrame(l: Layer): boolean {
  * first, then (for further files) the remaining empty frames in reading order.
  * No empty frame selected -> [] (photos become free-floating image layers).
  */
-export function pickFillTargets(layers: readonly Layer[], selection: ReadonlySet<string>): Layer[] {
+export function pickFillTargets(layers: readonly Layer[], selection: ReadonlySet<string>, dropFrameId?: string | null): Layer[] {
   const empty = layers.filter(isEmptyFrame);
   const order = (a: Layer, b: Layer) => (a.x === b.x ? a.y - b.y : a.x - b.x);
+  // Dropped onto a frame: it takes the first photo (replacing any photo it had),
+  // further photos continue into the other empty frames.
+  const dropped = dropFrameId ? layers.find((l) => l.id === dropFrameId && l.type === 'frame') : undefined;
+  if (dropped) return [dropped, ...empty.filter((l) => l.id !== dropped.id).sort(order)];
   const sel = empty.filter((l) => selection.has(l.id)).sort(order);
   if (!sel.length) return [];
   return [...sel, ...empty.filter((l) => !selection.has(l.id)).sort(order)];
 }
 
+/** Topmost visible, unlocked frame under a canvas point (rotation aware), or null. */
+export function frameAtPoint(layers: readonly Layer[], p: { x: number; y: number }): Layer | null {
+  for (let i = layers.length - 1; i >= 0; i--) {
+    const l = layers[i]!;
+    if (l.type !== 'frame' || l.hidden || l.locked) continue;
+    const q = toLocal(l, p);
+    if (q.x >= 0 && q.y >= 0 && q.x <= l.width && q.y <= l.height) return l;
+  }
+  return null;
+}
+
 /**
- * Add photos. A selected empty frame takes the first photo (more photos continue
+ * Add photos. A frame they were dropped onto, or else a selected empty frame, takes the first photo (more photos continue
  * into other empty frames); otherwise photos become free image layers centered on
  * the current slide.
  */
-export async function addPhotos(editor: Editor, files: readonly File[], currentSlide: number): Promise<AddPhotosResult> {
+export async function addPhotos(editor: Editor, files: readonly File[], currentSlide: number, dropFrameId?: string | null): Promise<AddPhotosResult> {
   const result: AddPhotosResult = { filled: 0, added: 0, failed: [] };
   const prepared: Awaited<ReturnType<typeof prepareImage>>[] = [];
   const names: string[] = [];
@@ -186,7 +202,7 @@ export async function addPhotos(editor: Editor, files: readonly File[], currentS
   const project = editor.project.peek();
   const selection = new Set(editor.selection.peek());
 
-  const targets = pickFillTargets(project.layers, selection);
+  const targets = pickFillTargets(project.layers, selection, dropFrameId);
 
   const newIds: string[] = [];
   const slideCursor = clampSlide(project, currentSlide);

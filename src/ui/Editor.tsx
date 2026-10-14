@@ -4,6 +4,7 @@ import {
   addFrame,
   addLine,
   addPhotos,
+  frameAtPoint,
   addShape,
   addText,
   deleteSelected,
@@ -198,11 +199,11 @@ export function Editor({ session }: { session: Session }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [editor]);
 
-  async function handleFiles(files: File[]) {
+  async function handleFiles(files: File[], dropFrameId?: string | null) {
     if (!files.length) return;
     setImporting(true);
     try {
-      const r = await addPhotos(editor, files, session.currentSlide.peek());
+      const r = await addPhotos(editor, files, session.currentSlide.peek(), dropFrameId);
       const parts = [];
       if (r.filled) parts.push(`filled ${r.filled} frame${r.filled === 1 ? '' : 's'}`);
       if (r.added) parts.push(`added ${r.added} photo${r.added === 1 ? '' : 's'}`);
@@ -301,7 +302,9 @@ export function Editor({ session }: { session: Session }) {
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();
-              void handleFiles([...(e.dataTransfer?.files ?? [])]);
+              const r = rendererRef.current;
+              const target = r ? frameAtPoint(editor.project.peek().layers, r.clientToCanvas(e.clientX, e.clientY)) : null;
+              void handleFiles([...(e.dataTransfer?.files ?? [])], target?.id);
             }}
           />
           {importing ? <div class="busy-pill" role="status">Importing photos...</div> : null}

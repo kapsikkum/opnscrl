@@ -104,6 +104,8 @@ export interface Renderer {
   onViewportChange(cb: () => void): () => void;
   /** Turn freehand draw mode on (pen or eraser) or off (null). Selection and dragging pause while on. */
   setDrawTool(tool: DrawTool | null): void;
+  /** Viewport (client) coordinates -> canvas px. */
+  clientToCanvas(clientX: number, clientY: number): { x: number; y: number };
   destroy(): void;
 }
 
@@ -996,6 +998,10 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
       return { left: abs.x, top: abs.y, scale: node.getAbsoluteScale().x, rotation: node.getAbsoluteRotation() };
     },
     setDrawTool,
+    clientToCanvas(clientX, clientY) {
+      const r = container.getBoundingClientRect();
+      return world.getAbsoluteTransform().copy().invert().point({ x: clientX - r.left, y: clientY - r.top });
+    },
     onViewportChange(cb) {
       viewportListeners.add(cb);
       return () => viewportListeners.delete(cb);

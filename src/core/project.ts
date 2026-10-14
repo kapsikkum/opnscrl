@@ -21,7 +21,7 @@ export interface CreateProjectOptions {
 export function createProject(opts: CreateProjectOptions = {}): Project {
   const now = opts.now ?? Date.now();
   const canvas: CanvasSettings = {
-    slideCount: opts.slideCount ?? 3,
+    slideCount: opts.slideCount ?? 1,
     aspect: opts.aspect ?? '4:5',
     customHeightPx: opts.customHeightPx ?? DEFAULT_CUSTOM_HEIGHT,
     slideWidthPx: opts.slideWidthPx ?? DEFAULT_SLIDE_WIDTH,

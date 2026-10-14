@@ -10,7 +10,7 @@ import { showEditor } from './nav';
 
 export function NewProjectDialog({ onClose }: { onClose: () => void }) {
   const [aspect, setAspect] = useState<Aspect>('4:5');
-  const [slides, setSlides] = useState(3);
+  const [slides, setSlides] = useState(1);
   const [customH, setCustomH] = useState(DEFAULT_CUSTOM_HEIGHT);
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
