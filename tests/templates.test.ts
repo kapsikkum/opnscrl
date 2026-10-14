@@ -232,10 +232,10 @@ describe('share links', () => {
 });
 
 describe('template sources', () => {
-  it('ships 6-8 valid, distinct built-in templates', () => {
+  it('ships 20+ valid, distinct built-in templates', () => {
     const all = builtinTemplates();
-    expect(all.length).toBeGreaterThanOrEqual(6);
-    expect(all.length).toBeLessThanOrEqual(8);
+    expect(all.length).toBeGreaterThanOrEqual(20);
+    expect(all[0]!.id).toBe('triple-panorama');
     expect(new Set(all.map((x) => x.id)).size).toBe(all.length);
     expect(new Set(all.map((x) => x.name)).size).toBe(all.length);
     for (const tpl of all) {

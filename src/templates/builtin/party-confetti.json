@@ -1,0 +1,361 @@
+{
+  "schemaVersion": 4,
+  "id": "party-confetti",
+  "name": "Party confetti",
+  "description": "A loud gradient celebration with sparkles, stars and a big boxed headline.",
+  "tags": [
+    "party",
+    "colorful",
+    "stickers"
+  ],
+  "canvas": {
+    "slideCount": 2,
+    "aspect": "1:1",
+    "customHeightPx": 1350,
+    "slideWidthPx": 1080,
+    "background": {
+      "kind": "solid",
+      "color": "#ff5fa2"
+    }
+  },
+  "layers": [
+    {
+      "id": "party-confetti-1",
+      "type": "background",
+      "x": 0,
+      "y": 0,
+      "width": 2160,
+      "height": 1080,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": true,
+      "hidden": false,
+      "name": "Confetti gradient",
+      "props": {
+        "fill": {
+          "kind": "linear-gradient",
+          "angle": 135,
+          "stops": [
+            {
+              "offset": 0,
+              "color": "#ffd34d"
+            },
+            {
+              "offset": 0.5,
+              "color": "#ff5fa2"
+            },
+            {
+              "offset": 1,
+              "color": "#7b5cff"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "party-confetti-2",
+      "type": "text",
+      "x": 110,
+      "y": 120,
+      "width": 520,
+      "height": 280,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Headline",
+      "props": {
+        "text": "IT'S A\nPARTY",
+        "fontFamily": "Anton, Impact, sans-serif",
+        "fontSize": 130,
+        "fontWeight": 400,
+        "color": "#ffffff",
+        "align": "left",
+        "lineHeight": 1.05,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null,
+        "background": {
+          "color": "#1b1340",
+          "opacity": 1,
+          "paddingX": 34,
+          "paddingY": 18,
+          "radius": 28
+        }
+      }
+    },
+    {
+      "id": "party-confetti-3",
+      "type": "frame",
+      "x": 620,
+      "y": 300,
+      "width": 1000,
+      "height": 640,
+      "rotation": 4,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Big photo",
+      "props": {
+        "cornerRadius": 40,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": {
+          "width": 14,
+          "color": "#ffffff"
+        },
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": "punch"
+      }
+    },
+    {
+      "id": "party-confetti-4",
+      "type": "frame",
+      "x": 110,
+      "y": 540,
+      "width": 400,
+      "height": 420,
+      "rotation": -6,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Small photo",
+      "props": {
+        "cornerRadius": 200,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": {
+          "width": 12,
+          "color": "#ffffff"
+        },
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": null
+      }
+    },
+    {
+      "id": "party-confetti-5",
+      "type": "frame",
+      "x": 1690,
+      "y": 120,
+      "width": 300,
+      "height": 380,
+      "rotation": 6,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Corner photo",
+      "props": {
+        "cornerRadius": 30,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": {
+          "width": 12,
+          "color": "#ffffff"
+        },
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": null
+      }
+    },
+    {
+      "id": "party-confetti-6",
+      "type": "sticker",
+      "x": 860,
+      "y": 90,
+      "width": 180,
+      "height": 180,
+      "rotation": -12,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Confetti 1",
+      "props": {
+        "builtinId": "sparkles",
+        "assetId": null,
+        "tint": "#ffffff",
+        "flipX": false,
+        "flipY": false
+      }
+    },
+    {
+      "id": "party-confetti-7",
+      "type": "sticker",
+      "x": 1500,
+      "y": 110,
+      "width": 120,
+      "height": 120,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Confetti 2",
+      "props": {
+        "builtinId": "star",
+        "assetId": null,
+        "tint": "#ffe14d",
+        "flipX": false,
+        "flipY": false
+      }
+    },
+    {
+      "id": "party-confetti-8",
+      "type": "sticker",
+      "x": 1880,
+      "y": 600,
+      "width": 160,
+      "height": 160,
+      "rotation": 12,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Confetti 3",
+      "props": {
+        "builtinId": "burst",
+        "assetId": null,
+        "tint": "#ffe14d",
+        "flipX": false,
+        "flipY": false
+      }
+    },
+    {
+      "id": "party-confetti-9",
+      "type": "sticker",
+      "x": 470,
+      "y": 450,
+      "width": 90,
+      "height": 90,
+      "rotation": -12,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Confetti 4",
+      "props": {
+        "builtinId": "sparkle",
+        "assetId": null,
+        "tint": "#ffffff",
+        "flipX": false,
+        "flipY": false
+      }
+    },
+    {
+      "id": "party-confetti-10",
+      "type": "sticker",
+      "x": 1560,
+      "y": 860,
+      "width": 100,
+      "height": 100,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Confetti 5",
+      "props": {
+        "builtinId": "heart",
+        "assetId": null,
+        "tint": "#ff3b6b",
+        "flipX": false,
+        "flipY": false
+      }
+    },
+    {
+      "id": "party-confetti-11",
+      "type": "sticker",
+      "x": 520,
+      "y": 930,
+      "width": 80,
+      "height": 80,
+      "rotation": 12,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Confetti 6",
+      "props": {
+        "builtinId": "star",
+        "assetId": null,
+        "tint": "#ffffff",
+        "flipX": false,
+        "flipY": false
+      }
+    },
+    {
+      "id": "party-confetti-12",
+      "type": "text",
+      "x": 1240,
+      "y": 970,
+      "width": 760,
+      "height": 56,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Date",
+      "props": {
+        "text": "SAT 14 · 8PM",
+        "fontFamily": "'Space Grotesk', system-ui, sans-serif",
+        "fontSize": 42,
+        "fontWeight": 700,
+        "color": "#1b1340",
+        "align": "right",
+        "lineHeight": 1.1,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null,
+        "background": {
+          "color": "#ffffff",
+          "opacity": 1,
+          "paddingX": 28,
+          "paddingY": 12,
+          "radius": 999
+        }
+      }
+    }
+  ],
+  "createdAt": 1767225600000
+}

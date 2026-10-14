@@ -1,0 +1,377 @@
+{
+  "schemaVersion": 4,
+  "id": "film-strip",
+  "name": "Film strip",
+  "description": "A continuous strip of film frames with sprocket holes running across four slides.",
+  "tags": [
+    "panorama",
+    "film",
+    "dark"
+  ],
+  "canvas": {
+    "slideCount": 4,
+    "aspect": "4:5",
+    "customHeightPx": 1350,
+    "slideWidthPx": 1080,
+    "background": {
+      "kind": "solid",
+      "color": "#1a1a1a"
+    }
+  },
+  "layers": [
+    {
+      "id": "film-strip-1",
+      "type": "shape",
+      "x": 0,
+      "y": 260,
+      "width": 4320,
+      "height": 830,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": true,
+      "hidden": false,
+      "name": "Strip",
+      "props": {
+        "kind": "rect",
+        "fill": {
+          "kind": "solid",
+          "color": "#050505"
+        },
+        "stroke": "#111111",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      }
+    },
+    {
+      "id": "film-strip-2",
+      "type": "line",
+      "x": 0,
+      "y": 285,
+      "width": 4320,
+      "height": 40,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": true,
+      "hidden": false,
+      "name": "Sprockets top",
+      "props": {
+        "start": {
+          "x": 0,
+          "y": 0.5
+        },
+        "end": {
+          "x": 1,
+          "y": 0.5
+        },
+        "color": "#2e2e2e",
+        "width": 30,
+        "dash": "dashed",
+        "startCap": "none",
+        "endCap": "none"
+      }
+    },
+    {
+      "id": "film-strip-3",
+      "type": "line",
+      "x": 0,
+      "y": 1025,
+      "width": 4320,
+      "height": 40,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": true,
+      "hidden": false,
+      "name": "Sprockets bottom",
+      "props": {
+        "start": {
+          "x": 0,
+          "y": 0.5
+        },
+        "end": {
+          "x": 1,
+          "y": 0.5
+        },
+        "color": "#2e2e2e",
+        "width": 30,
+        "dash": "dashed",
+        "startCap": "none",
+        "endCap": "none"
+      }
+    },
+    {
+      "id": "film-strip-4",
+      "type": "frame",
+      "x": 40,
+      "y": 350,
+      "width": 673,
+      "height": 650,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Frame 1",
+      "props": {
+        "cornerRadius": 4,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": "film"
+      }
+    },
+    {
+      "id": "film-strip-5",
+      "type": "frame",
+      "x": 753,
+      "y": 350,
+      "width": 673,
+      "height": 650,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Frame 2",
+      "props": {
+        "cornerRadius": 4,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": "film"
+      }
+    },
+    {
+      "id": "film-strip-6",
+      "type": "frame",
+      "x": 1466,
+      "y": 350,
+      "width": 673,
+      "height": 650,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Frame 3",
+      "props": {
+        "cornerRadius": 4,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": "film"
+      }
+    },
+    {
+      "id": "film-strip-7",
+      "type": "frame",
+      "x": 2179,
+      "y": 350,
+      "width": 673,
+      "height": 650,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Frame 4",
+      "props": {
+        "cornerRadius": 4,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": "film"
+      }
+    },
+    {
+      "id": "film-strip-8",
+      "type": "frame",
+      "x": 2892,
+      "y": 350,
+      "width": 673,
+      "height": 650,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Frame 5",
+      "props": {
+        "cornerRadius": 4,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": "film"
+      }
+    },
+    {
+      "id": "film-strip-9",
+      "type": "frame",
+      "x": 3605,
+      "y": 350,
+      "width": 673,
+      "height": 650,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Frame 6",
+      "props": {
+        "cornerRadius": 4,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": "film"
+      }
+    },
+    {
+      "id": "film-strip-10",
+      "type": "text",
+      "x": 80,
+      "y": 130,
+      "width": 1000,
+      "height": 70,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Roll label",
+      "props": {
+        "text": "ROLL 01",
+        "fontFamily": "'Space Mono', ui-monospace, monospace",
+        "fontSize": 56,
+        "fontWeight": 700,
+        "color": "#f2b134",
+        "align": "left",
+        "lineHeight": 1.1,
+        "letterSpacing": 8,
+        "stroke": null,
+        "shadow": null,
+        "background": null
+      }
+    },
+    {
+      "id": "film-strip-11",
+      "type": "text",
+      "x": 3240,
+      "y": 1160,
+      "width": 1000,
+      "height": 50,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Stock",
+      "props": {
+        "text": "400 · 36 EXP",
+        "fontFamily": "'Space Mono', ui-monospace, monospace",
+        "fontSize": 40,
+        "fontWeight": 400,
+        "color": "#f2b134",
+        "align": "right",
+        "lineHeight": 1.1,
+        "letterSpacing": 6,
+        "stroke": null,
+        "shadow": null,
+        "background": null
+      }
+    }
+  ],
+  "createdAt": 1767225600000
+}

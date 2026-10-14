@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 4,
   "id": "quote-photo",
   "name": "Quote + photo",
   "description": "A bold quote on the first slide, a full photo on the second.",
@@ -40,7 +40,8 @@
         "lineHeight": 0.9,
         "letterSpacing": 0,
         "stroke": null,
-        "shadow": null
+        "shadow": null,
+        "background": null
       }
     },
     {
@@ -65,7 +66,8 @@
         "lineHeight": 1.15,
         "letterSpacing": 0,
         "stroke": null,
-        "shadow": null
+        "shadow": null,
+        "background": null
       }
     },
     {
@@ -113,7 +115,8 @@
         "lineHeight": 1.1,
         "letterSpacing": 8,
         "stroke": null,
-        "shadow": null
+        "shadow": null,
+        "background": null
       }
     },
     {
@@ -134,7 +137,23 @@
         "fit": "cover",
         "placeholderLabel": "Drop photo",
         "border": null,
-        "shadow": null
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": null
       }
     }
   ],

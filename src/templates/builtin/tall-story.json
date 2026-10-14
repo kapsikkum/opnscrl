@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 4,
   "id": "tall-story",
   "name": "Tall story 9:16",
   "description": "Full-height slides with a wide framed photo and a big condensed headline.",
@@ -69,7 +69,8 @@
         "lineHeight": 1,
         "letterSpacing": 0,
         "stroke": null,
-        "shadow": null
+        "shadow": null,
+        "background": null
       }
     },
     {
@@ -93,7 +94,23 @@
           "width": 14,
           "color": "#ffffff"
         },
-        "shadow": null
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": null
       }
     },
     {
@@ -146,7 +163,8 @@
         "lineHeight": 1.1,
         "letterSpacing": 0,
         "stroke": null,
-        "shadow": null
+        "shadow": null,
+        "background": null
       }
     }
   ],

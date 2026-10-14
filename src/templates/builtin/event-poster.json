@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 4,
+  "id": "event-poster",
+  "name": "Event poster",
+  "description": "A single bold slide: photo, big date, place and a burst callout.",
+  "tags": [
+    "event",
+    "poster",
+    "headline"
+  ],
+  "canvas": {
+    "slideCount": 1,
+    "aspect": "4:5",
+    "customHeightPx": 1350,
+    "slideWidthPx": 1080,
+    "background": {
+      "kind": "solid",
+      "color": "#ff4d2e"
+    }
+  },
+  "layers": [
+    {
+      "id": "event-poster-1",
+      "type": "frame",
+      "x": 70,
+      "y": 70,
+      "width": 940,
+      "height": 760,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Photo",
+      "props": {
+        "cornerRadius": 0,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": "punch"
+      }
+    },
+    {
+      "id": "event-poster-2",
+      "type": "text",
+      "x": 70,
+      "y": 850,
+      "width": 700,
+      "height": 220,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Date",
+      "props": {
+        "text": "21.06",
+        "fontFamily": "Anton, Impact, sans-serif",
+        "fontSize": 230,
+        "fontWeight": 400,
+        "color": "#fff3e6",
+        "align": "left",
+        "lineHeight": 0.95,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null,
+        "background": null
+      }
+    },
+    {
+      "id": "event-poster-3",
+      "type": "text",
+      "x": 70,
+      "y": 1100,
+      "width": 940,
+      "height": 70,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Event",
+      "props": {
+        "text": "LIVE IN THE PARK",
+        "fontFamily": "'Space Grotesk', system-ui, sans-serif",
+        "fontSize": 56,
+        "fontWeight": 700,
+        "color": "#1a0f0a",
+        "align": "left",
+        "lineHeight": 1.1,
+        "letterSpacing": 2,
+        "stroke": null,
+        "shadow": null,
+        "background": null
+      }
+    },
+    {
+      "id": "event-poster-4",
+      "type": "text",
+      "x": 90,
+      "y": 1210,
+      "width": 700,
+      "height": 46,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Place",
+      "props": {
+        "text": "Doors 6pm · free entry",
+        "fontFamily": "'Space Grotesk', system-ui, sans-serif",
+        "fontSize": 38,
+        "fontWeight": 500,
+        "color": "#1a0f0a",
+        "align": "left",
+        "lineHeight": 1.1,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null,
+        "background": {
+          "color": "#fff3e6",
+          "opacity": 1,
+          "paddingX": 20,
+          "paddingY": 8,
+          "radius": 999
+        }
+      }
+    },
+    {
+      "id": "event-poster-5",
+      "type": "sticker",
+      "x": 760,
+      "y": 720,
+      "width": 260,
+      "height": 260,
+      "rotation": 10,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Burst",
+      "props": {
+        "builtinId": "burst",
+        "assetId": null,
+        "tint": "#ffe14d",
+        "flipX": false,
+        "flipY": false
+      }
+    },
+    {
+      "id": "event-poster-6",
+      "type": "text",
+      "x": 790,
+      "y": 812,
+      "width": 200,
+      "height": 72,
+      "rotation": 10,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Burst text",
+      "props": {
+        "text": "FREE",
+        "fontFamily": "Anton, Impact, sans-serif",
+        "fontSize": 64,
+        "fontWeight": 400,
+        "color": "#1a0f0a",
+        "align": "center",
+        "lineHeight": 1.1,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null,
+        "background": null
+      }
+    }
+  ],
+  "createdAt": 1767225600000
+}

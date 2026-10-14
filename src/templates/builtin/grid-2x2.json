@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 4,
   "id": "grid-2x2",
   "name": "2x2 grid",
   "description": "Four square-ish photos in a tidy grid on a dark background.",
@@ -36,7 +36,23 @@
         "fit": "cover",
         "placeholderLabel": "Drop photo",
         "border": null,
-        "shadow": null
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": null
       }
     },
     {
@@ -57,7 +73,23 @@
         "fit": "cover",
         "placeholderLabel": "Drop photo",
         "border": null,
-        "shadow": null
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": null
       }
     },
     {
@@ -78,7 +110,23 @@
         "fit": "cover",
         "placeholderLabel": "Drop photo",
         "border": null,
-        "shadow": null
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": null
       }
     },
     {
@@ -99,7 +147,23 @@
         "fit": "cover",
         "placeholderLabel": "Drop photo",
         "border": null,
-        "shadow": null
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": null
       }
     }
   ],

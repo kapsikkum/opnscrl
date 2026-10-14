@@ -6,14 +6,37 @@
 import { validateTemplate } from './codec';
 import { toListing, type Template, type TemplateListing } from './schema';
 
-import gradientGallery from './builtin/gradient-gallery.json';
-import grid2x2 from './builtin/grid-2x2.json';
-import minimalBorder from './builtin/minimal-border.json';
-import polaroidRow from './builtin/polaroid-row.json';
-import quotePhoto from './builtin/quote-photo.json';
-import story5 from './builtin/story-5.json';
-import tallStory from './builtin/tall-story.json';
-import triplePanorama from './builtin/triple-panorama.json';
+// Every generated file in builtin/ ships; ORDER only sets the gallery order
+// (unlisted ones follow alphabetically).
+const BUILTIN_FILES = import.meta.glob('./builtin/*.json', { eager: true, import: 'default' }) as Record<string, unknown>;
+const ORDER = [
+  'triple-panorama',
+  'grid-2x2',
+  'polaroid-row',
+  'travel-journal',
+  'hero-seams',
+  'weekend-dump',
+  'quote-photo',
+  'story-5',
+  'mood-board',
+  'film-strip',
+  'annotated',
+  'party-confetti',
+  'recipe-card',
+  'before-after',
+  'tips-list',
+  'product-launch',
+  'event-poster',
+  'pastel-hearts',
+  'noir-portrait',
+  'minimal-border',
+  'gradient-gallery',
+  'tall-story',
+];
+const rank = (path: string) => {
+  const i = ORDER.indexOf(path.slice(path.lastIndexOf('/') + 1, -'.json'.length));
+  return i < 0 ? ORDER.length : i;
+};
 
 export interface TemplateSource {
   /** Stable id of the source, e.g. 'builtin', 'local'. */
@@ -27,16 +50,9 @@ export interface TemplateSource {
   get(id: string): Promise<Template | null>;
 }
 
-const BUILTIN_RAW: readonly unknown[] = [
-  triplePanorama,
-  grid2x2,
-  polaroidRow,
-  quotePhoto,
-  story5,
-  minimalBorder,
-  gradientGallery,
-  tallStory,
-];
+const BUILTIN_RAW: readonly unknown[] = Object.keys(BUILTIN_FILES)
+  .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
+  .map((k) => BUILTIN_FILES[k]);
 
 let builtinCache: Template[] | null = null;
 

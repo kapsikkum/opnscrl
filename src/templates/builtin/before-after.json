@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 4,
+  "id": "before-after",
+  "name": "Before / after",
+  "description": "Two slides side by side with labels and an arrow across the seam.",
+  "tags": [
+    "comparison",
+    "minimal"
+  ],
+  "canvas": {
+    "slideCount": 2,
+    "aspect": "4:5",
+    "customHeightPx": 1350,
+    "slideWidthPx": 1080,
+    "background": {
+      "kind": "solid",
+      "color": "#f2f2f0"
+    }
+  },
+  "layers": [
+    {
+      "id": "before-after-1",
+      "type": "frame",
+      "x": 60,
+      "y": 60,
+      "width": 990,
+      "height": 1230,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Before",
+      "props": {
+        "cornerRadius": 28,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": "fade"
+      }
+    },
+    {
+      "id": "before-after-2",
+      "type": "frame",
+      "x": 1110,
+      "y": 60,
+      "width": 990,
+      "height": 1230,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "After",
+      "props": {
+        "cornerRadius": 28,
+        "assetId": null,
+        "fit": "cover",
+        "placeholderLabel": "Drop photo",
+        "border": null,
+        "shadow": null,
+        "adjust": {
+          "brightness": 0,
+          "contrast": 0,
+          "saturation": 0,
+          "exposure": 0,
+          "temperature": 0,
+          "tint": 0,
+          "vibrance": 0,
+          "highlights": 0,
+          "shadows": 0,
+          "sharpen": 0,
+          "blur": 0,
+          "grain": 0,
+          "vignette": 0
+        },
+        "preset": null
+      }
+    },
+    {
+      "id": "before-after-3",
+      "type": "text",
+      "x": 120,
+      "y": 1180,
+      "width": 400,
+      "height": 48,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Before label",
+      "props": {
+        "text": "BEFORE",
+        "fontFamily": "'Space Grotesk', system-ui, sans-serif",
+        "fontSize": 40,
+        "fontWeight": 700,
+        "color": "#111111",
+        "align": "left",
+        "lineHeight": 1.1,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null,
+        "background": {
+          "color": "#ffffff",
+          "opacity": 0.92,
+          "paddingX": 28,
+          "paddingY": 12,
+          "radius": 999
+        }
+      }
+    },
+    {
+      "id": "before-after-4",
+      "type": "text",
+      "x": 1640,
+      "y": 1180,
+      "width": 400,
+      "height": 48,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "After label",
+      "props": {
+        "text": "AFTER",
+        "fontFamily": "'Space Grotesk', system-ui, sans-serif",
+        "fontSize": 40,
+        "fontWeight": 700,
+        "color": "#ffffff",
+        "align": "right",
+        "lineHeight": 1.1,
+        "letterSpacing": 0,
+        "stroke": null,
+        "shadow": null,
+        "background": {
+          "color": "#111111",
+          "opacity": 0.92,
+          "paddingX": 28,
+          "paddingY": 12,
+          "radius": 999
+        }
+      }
+    },
+    {
+      "id": "before-after-5",
+      "type": "shape",
+      "x": 1000,
+      "y": 595,
+      "width": 160,
+      "height": 160,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Arrow badge",
+      "props": {
+        "kind": "ellipse",
+        "fill": {
+          "kind": "solid",
+          "color": "#ffffff"
+        },
+        "stroke": "#111111",
+        "strokeWidth": 0,
+        "cornerRadius": 0
+      }
+    },
+    {
+      "id": "before-after-6",
+      "type": "sticker",
+      "x": 1030,
+      "y": 625,
+      "width": 100,
+      "height": 100,
+      "rotation": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden": false,
+      "name": "Arrow",
+      "props": {
+        "builtinId": "arrow-right",
+        "assetId": null,
+        "tint": "#111111",
+        "flipX": false,
+        "flipY": false
+      }
+    }
+  ],
+  "createdAt": 1767225600000
+}
