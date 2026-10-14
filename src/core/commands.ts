@@ -16,7 +16,7 @@ export type Op =
   | { op: 'updateLayer'; id: string; patch: LayerPatch }
   | { op: 'reorder'; id: string; toIndex: number }
   | { op: 'duplicate'; id: string; newId: string; offset?: { x: number; y: number } }
-  | { op: 'setCanvas'; patch: Partial<CanvasSettings>; fitBackgrounds?: boolean }
+  | { op: 'setCanvas'; patch: Partial<CanvasSettings>; fitBackgrounds?: boolean; fitLayers?: boolean }
   | { op: 'addAsset'; id: string; meta: AssetMeta }
   | { op: 'removeAsset'; id: string }
   | { op: 'rename'; name: string }
@@ -116,14 +116,18 @@ export function removeAsset(project: Project, id: string): CommandResult {
 }
 
 /**
- * Change slide count / aspect / width / background. Layers are NOT moved: they
- * keep their panorama coordinates. With `fitBackgrounds`, background layers
- * that exactly covered the old canvas are resized to cover the new one.
+ * Change slide count / aspect / width / background. By default layers keep
+ * their panorama coordinates. With `fitBackgrounds`, background layers that
+ * exactly covered the old canvas are resized to cover the new one. With
+ * `fitLayers`, a change of slide size (aspect, custom height, slide width)
+ * rescales the layout: frames stretch with the slide (grids keep filling it)
+ * and every other layer keeps its size but moves with its center.
  */
 export function setCanvas(
   project: Project,
   patch: Partial<CanvasSettings>,
   fitBackgrounds = false,
+  fitLayers = false,
 ): CommandResult {
   const next: CanvasSettings = { ...project.canvas, ...patch };
   if (patch.slideCount !== undefined) {
@@ -134,17 +138,32 @@ export function setCanvas(
   const canvasInverse: Op = { op: 'setCanvas', patch: prevValues as Partial<CanvasSettings> };
 
   let current: Project = { ...project, canvas: next };
-  if (!fitBackgrounds) return { project: current, inverse: canvasInverse };
+  if (!fitBackgrounds && !fitLayers) return { project: current, inverse: canvasInverse };
 
   const oldSize = canvasSize(project.canvas);
   const newSize = canvasSize(next);
+  const sx = next.slideWidthPx / project.canvas.slideWidthPx;
+  const sy = newSize.height / oldSize.height;
+  const scaleLayers = fitLayers && (sx !== 1 || sy !== 1);
+  const r2 = (v: number) => Math.round(v * 100) / 100;
   const inverses: Op[] = [];
   for (const l of project.layers) {
+    let patch: LayerPatch | null = null;
     if (l.type === 'background' && l.x === 0 && l.y === 0 && l.width === oldSize.width && l.height === oldSize.height) {
-      const r = updateLayer(current, l.id, { width: newSize.width, height: newSize.height });
-      current = r.project;
-      inverses.push(r.inverse);
+      if (fitBackgrounds) patch = { width: newSize.width, height: newSize.height };
+    } else if (scaleLayers) {
+      if (l.type === 'frame') {
+        patch = { x: r2(l.x * sx), y: r2(l.y * sy), width: r2(l.width * sx), height: r2(l.height * sy) };
+      } else {
+        const cx = l.x + l.width / 2;
+        const cy = l.y + l.height / 2;
+        patch = { x: r2(cx * sx - l.width / 2), y: r2(cy * sy - l.height / 2) };
+      }
     }
+    if (!patch) continue;
+    const r = updateLayer(current, l.id, patch);
+    current = r.project;
+    inverses.push(r.inverse);
   }
   if (!inverses.length) return { project: current, inverse: canvasInverse };
   return { project: current, inverse: { op: 'batch', ops: [...inverses.reverse(), canvasInverse] } };
@@ -179,7 +198,7 @@ export function applyOp(project: Project, op: Op): CommandResult {
     case 'duplicate':
       return duplicate(project, op.id, op.newId, op.offset);
     case 'setCanvas':
-      return setCanvas(project, op.patch, op.fitBackgrounds);
+      return setCanvas(project, op.patch, op.fitBackgrounds, op.fitLayers);
     case 'addAsset':
       return addAsset(project, op.id, op.meta);
     case 'removeAsset':

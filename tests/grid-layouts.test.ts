@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { gridArea, gridArgsCells, gridLayers } from '../src/core/grid';
+import { applyOp } from '../src/core/commands';
+import { canvasSize } from '../src/core/geometry';
+import { gridArea, gridArgsCells, gridLayers, gridOps } from '../src/core/grid';
 import { GRID_LAYOUTS, getGridLayout, layoutCells } from '../src/core/gridLayouts';
 import { createProject } from '../src/core/project';
+import { createLayer } from '../src/layers';
 
 const area = { x: 0, y: 0, width: 1080, height: 1350 };
 
@@ -67,6 +70,27 @@ describe('grid layouts', () => {
         }
       }
     }
+  });
+
+  it('defaults to square corners', () => {
+    const p = createProject({ slideCount: 1 });
+    const [f] = gridLayers(p, { rows: 1, cols: 1, gutter: 0, padding: 0, area: { slide: 0 }, layout: 'single' });
+    expect(f!.props.cornerRadius).toBe(0);
+  });
+
+  it('grids keep filling the slide when the aspect changes, and undo restores them', () => {
+    let p = createProject({ slideCount: 2, aspect: '4:5' });
+    const text = createLayer('text', { x: 100, y: 1200, width: 400, height: 100 });
+    p = applyOp(p, { op: 'batch', ops: [...gridOps(p, { rows: 0, cols: 0, gutter: 0, padding: 0, area: 'canvas', layout: 'quad' }), { op: 'addLayer', layer: text }] }).project;
+    const r = applyOp(p, { op: 'setCanvas', patch: { aspect: '9:16' }, fitBackgrounds: true, fitLayers: true });
+    const { width, height } = canvasSize(r.project.canvas);
+    const frames = r.project.layers.filter((l) => l.type === 'frame');
+    expect(Math.max(...frames.map((f) => f.y + f.height))).toBeCloseTo(height, 0);
+    expect(Math.max(...frames.map((f) => f.x + f.width))).toBeCloseTo(width, 0);
+    const t = r.project.layers.find((l) => l.id === text.id)!;
+    expect(t.width).toBe(400); // non-frames keep their size
+    expect(t.y + t.height / 2).toBeCloseTo((1250 * 1920) / 1350, 1);
+    expect(applyOp(r.project, r.inverse).project).toEqual(p);
   });
 
   it('rejects unknown layouts and oversized gutters', () => {

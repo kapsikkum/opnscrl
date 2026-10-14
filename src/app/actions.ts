@@ -279,7 +279,7 @@ export function layerCountOnSlide(project: Project, index: number): number {
 }
 
 export function setCanvasSettings(editor: Editor, patch: Partial<CanvasSettings>): void {
-  editor.dispatch({ op: 'setCanvas', patch, fitBackgrounds: true }, { coalesceKey: `canvas:${Object.keys(patch).join(',')}` });
+  editor.dispatch({ op: 'setCanvas', patch, fitBackgrounds: true, fitLayers: true }, { coalesceKey: `canvas:${Object.keys(patch).join(',')}` });
 }
 
 export function setCanvasBackground(editor: Editor, fill: Fill): void {

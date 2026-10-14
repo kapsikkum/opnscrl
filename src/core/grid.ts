@@ -27,7 +27,7 @@ export interface GridArgs {
    * `rows`/`cols` are ignored when this is set.
    */
   layout?: string;
-  /** Corner radius of the generated frames (default 16). */
+  /** Corner radius of the generated frames (default 0). */
   cornerRadius?: number;
   /** Supply ids for deterministic output (tests); otherwise random. */
   ids?: readonly string[];
@@ -102,7 +102,7 @@ export function gridLayers(project: Project, args: GridArgs): FrameLayer[] {
       hidden: false,
       name: args.layout ? `Cell ${i + 1}` : `Frame r${row}c${col}`,
       props: {
-        cornerRadius: args.cornerRadius ?? 16,
+        cornerRadius: args.cornerRadius ?? 0,
         assetId: null,
         fit: 'cover',
         placeholderLabel: 'Drop photo',

@@ -14,11 +14,16 @@ const GROUPS: { id: GridLayout['group']; label: string }[] = [
   { id: 'panorama', label: 'Across slides' },
 ];
 
-function LayoutThumb({ layout }: { layout: GridLayout }) {
+/** Layout icon drawn in the target area's aspect ratio (fitted into a 40x40 box). */
+function LayoutThumb({ layout, aspect }: { layout: GridLayout; aspect: number }) {
+  const w = aspect >= 1 ? 36 : 36 * aspect;
+  const h = aspect >= 1 ? 36 / aspect : 36;
+  const ox = (40 - w) / 2;
+  const oy = (40 - h) / 2;
   return (
     <svg viewBox="0 0 40 40" aria-hidden="true">
       {layout.cells.map(({ box: [x0, y0, x1, y1] }, i) => (
-        <rect key={i} x={2 + x0 * 36 + 0.8} y={2 + y0 * 36 + 0.8} width={(x1 - x0) * 36 - 1.6} height={(y1 - y0) * 36 - 1.6} rx={1.5} />
+        <rect key={i} x={ox + x0 * w + 0.5} y={oy + y0 * h + 0.5} width={Math.max(0.5, (x1 - x0) * w - 1)} height={Math.max(0.5, (y1 - y0) * h - 1)} rx={0.6} />
       ))}
     </svg>
   );
@@ -28,9 +33,9 @@ export function GridDialog({ session, onClose }: { session: Session; onClose: ()
   const [layout, setLayout] = useState<string | null>('quad');
   const [rows, setRows] = useState(2);
   const [cols, setCols] = useState(2);
-  const [gutter, setGutter] = useState(24);
-  const [padding, setPadding] = useState(48);
-  const [radius, setRadius] = useState(16);
+  const [gutter, setGutter] = useState(8);
+  const [padding, setPadding] = useState(0);
+  const [radius, setRadius] = useState(0);
   const [scope, setScope] = useState<'slide' | 'canvas'>('slide');
   const project = session.editor.project.peek();
   const slide = Math.min(session.currentSlide.peek(), project.canvas.slideCount - 1);
@@ -87,7 +92,7 @@ export function GridDialog({ session, onClose }: { session: Session; onClose: ()
           <div class="layout-picker" role="radiogroup" aria-label={`${g.label} layouts`}>
             {GRID_LAYOUTS.filter((l) => l.group === g.id).map((l) => (
               <button key={l.id} role="radio" aria-checked={layout === l.id} class={`layout-chip${layout === l.id ? ' on' : ''}`} title={l.label} aria-label={l.label} onClick={() => pick(l)}>
-                <LayoutThumb layout={l} />
+                <LayoutThumb layout={l} aspect={area.width / area.height} />
               </button>
             ))}
           </div>
