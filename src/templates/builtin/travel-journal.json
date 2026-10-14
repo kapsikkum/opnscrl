@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "travel-journal",
   "name": "Travel journal",
   "description": "Taped photos on kraft paper with handwritten notes and a location pill.",
@@ -434,5 +434,6 @@
       }
     }
   ],
+  "grids": {},
   "createdAt": 1767225600000
 }

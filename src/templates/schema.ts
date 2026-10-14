@@ -7,7 +7,7 @@
  * canvas + layers, so core migrations apply to them unchanged).
  */
 import { z } from 'zod';
-import { canvasSchema, layerSchema, SCHEMA_VERSION } from '../core/schema';
+import { canvasSchema, gridGroupSchema, layerSchema, SCHEMA_VERSION } from '../core/schema';
 
 /** Embedded assets are limited to raster images; SVG is excluded on purpose. */
 const DATA_URL = /^data:image\/(?:png|jpeg|webp|gif|avif);base64,[A-Za-z0-9+/]*={0,2}$/;
@@ -30,6 +30,8 @@ export const templateSchema = z
     tags: z.array(z.string().min(1).max(40)).max(20),
     canvas: canvasSchema,
     layers: z.array(layerSchema).max(MAX_TEMPLATE_LAYERS),
+    /** Grid groups by id; their cells reference layer ids in this template. */
+    grids: z.record(z.string(), gridGroupSchema).default({}),
     /** Present only when the template embeds its photos. */
     assets: z.record(z.string(), templateAssetSchema).optional(),
     createdAt: z.number(),

@@ -34,6 +34,7 @@ export function createProject(opts: CreateProjectOptions = {}): Project {
     canvas,
     layers: [],
     assets: {},
+    grids: {},
     createdAt: now,
     updatedAt: now,
   };

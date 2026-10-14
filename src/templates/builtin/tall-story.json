@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "tall-story",
   "name": "Tall story 9:16",
   "description": "Full-height slides with a wide framed photo and a big condensed headline.",
@@ -168,5 +168,6 @@
       }
     }
   ],
+  "grids": {},
   "createdAt": 1767225600000
 }

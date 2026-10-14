@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "minimal-border",
   "name": "Minimal border",
   "description": "A thin keyline on every slide around one wide photo, with page numbers.",
@@ -229,5 +229,6 @@
       }
     }
   ],
+  "grids": {},
   "createdAt": 1767225600000
 }

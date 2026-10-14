@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "triple-panorama",
   "name": "Triple panorama",
   "description": "One wide photo that runs across three slides, with a swipe cue underneath.",
@@ -142,5 +142,6 @@
       }
     }
   ],
+  "grids": {},
   "createdAt": 1767225600000
 }

@@ -5,10 +5,11 @@
  */
 import { neutralAdjust } from './adjust';
 import { batch, type CommandResult, type Op } from './commands';
+import { gridFrameRects } from './gridGroup';
 import { canvasSize, slideRects, type Rect } from './geometry';
 import { createId } from './id';
-import { getGridLayout, layoutCells } from './gridLayouts';
-import type { FrameLayer, Layer, Project } from './types';
+import { getGridLayout, layoutCells, uniformCells } from './gridLayouts';
+import type { FrameLayer, GridGroup, Layer, LayerPatch, Project } from './types';
 
 export interface GridArgs {
   rows: number;
@@ -115,7 +116,11 @@ export function gridLayers(project: Project, args: GridArgs): FrameLayer[] {
   });
 }
 
-/** The ops that add the grid (one addLayer per cell). Dispatch `{ op: 'batch', ops }` for a single undo step. */
+/**
+ * The ops that add the grid as loose frames (one addLayer per cell, no grid
+ * group; use `createGridOps` for an editable one). Dispatch
+ * `{ op: 'batch', ops }` for a single undo step.
+ */
 export function gridOps(project: Project, args: GridArgs): Op[] {
   return gridLayers(project, args).map((layer): Op => ({ op: 'addLayer', layer: layer as Layer }));
 }
@@ -123,4 +128,62 @@ export function gridOps(project: Project, args: GridArgs): Op[] {
 /** Command: add a rows x cols grid of frames to the project. */
 export function applyGrid(project: Project, args: GridArgs): CommandResult {
   return batch(project, gridOps(project, args));
+}
+
+/**
+ * Ops that create a grid group: one `addLayer` per cell plus a `setGrid` that
+ * records the layout. Frame geometry comes from `gridFrameRects` of the new
+ * group, so a later relayout does not move anything. `id` names the group
+ * (default: random `grd_...`); `ids` names the frames. Dispatch as one batch.
+ */
+export function createGridOps(project: Project, args: GridArgs & { id?: string }): Op[] {
+  const area = gridArea(project, args.area);
+  const layout = args.layout ? getGridLayout(args.layout) : undefined;
+  if (args.layout && !layout) throw new RangeError(`Unknown grid layout "${args.layout}"`);
+  const cells = layout ? layout.cells : uniformCells(args.rows, args.cols);
+  if (!layout) {
+    // validate rows/cols/gutter/padding with the same errors as gridLayers
+    gridCells(area, args);
+  }
+  const frames = gridLayers(project, args);
+  const grid: GridGroup = {
+    area: { x: area.x, y: area.y, width: area.width, height: area.height },
+    gutter: args.gutter,
+    padding: args.padding,
+    cornerRadius: args.cornerRadius ?? 0,
+    cells: cells.map((c, i) => ({
+      frameId: frames[i]!.id,
+      box: [c.box[0], c.box[1], c.box[2], c.box[3]],
+      ...(c.inset ? { inset: true } : {}),
+    })),
+  };
+  const rects = gridFrameRects(grid);
+  const ops: Op[] = frames.map((f, i): Op => ({ op: 'addLayer', layer: { ...f, ...rects[i]! } as Layer }));
+  ops.push({ op: 'setGrid', id: args.id ?? createId('grd'), grid });
+  return ops;
+}
+
+/**
+ * Ops that make `grid` the new state of group `gridId` and move every
+ * existing cell frame to match (x, y, size, rotation 0, corner radius). Cells
+ * whose frame was deleted are skipped. If frames were moved since the group was
+ * last laid out, pass `syncGridArea(project, stored)` as the basis for `grid`
+ * so they are not snapped back.
+ */
+export function relayoutOps(project: Project, gridId: string, grid: GridGroup): Op[] {
+  const rects = gridFrameRects(grid);
+  const frames = new Set(project.layers.filter((l) => l.type === 'frame').map((l) => l.id));
+  const ops: Op[] = [{ op: 'setGrid', id: gridId, grid }];
+  grid.cells.forEach((cell, i) => {
+    if (!frames.has(cell.frameId)) return;
+    const { x, y, width, height } = rects[i]!;
+    const patch = { x, y, width, height, rotation: 0, props: { cornerRadius: grid.cornerRadius } } as LayerPatch;
+    ops.push({ op: 'updateLayer', id: cell.frameId, patch });
+  });
+  return ops;
+}
+
+/** Dissolve a grid group: the frames stay where they are as ordinary layers. */
+export function ungroupOps(_project: Project, gridId: string): Op[] {
+  return [{ op: 'setGrid', id: gridId, grid: null }];
 }

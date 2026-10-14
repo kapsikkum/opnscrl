@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "event-poster",
   "name": "Event poster",
   "description": "A single bold slide: photo, big date, place and a burst callout.",
@@ -187,5 +187,6 @@
       }
     }
   ],
+  "grids": {},
   "createdAt": 1767225600000
 }

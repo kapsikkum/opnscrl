@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'templates', 'builtin');
 mkdirSync(OUT, { recursive: true });
 
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 const SW = 1080;
 const HEIGHTS = { '4:5': 1350, '1:1': 1080, '9:16': 1920 };
 const CREATED = Date.UTC(2026, 0, 1);
@@ -79,13 +79,13 @@ function make({ id, name, description, tags, slides, aspect, bg = solid('#ffffff
     layout(area, boxes, { gutter = 24, padding = 48, name = 'Photo', ...p } = {}) {
       const iw = area.w - 2 * padding;
       const ih = area.h - 2 * padding;
-      const half = gutter / 2;
-      const pull = (v, start) => (v <= 1e-6 || v >= 1 - 1e-6 ? 0 : start ? half : -half);
+      // same edge math as core/gridLayouts layoutCells
+      const at = (v, size, start) => v * (size + gutter) - (start ? 0 : gutter);
       boxes.forEach(([x0, y0, x1, y1], i) => {
-        const l = Math.round(area.x + padding + x0 * iw + pull(x0, true));
-        const r = Math.round(area.x + padding + x1 * iw + pull(x1, false));
-        const t = Math.round(area.y + padding + y0 * ih + pull(y0, true));
-        const b = Math.round(area.y + padding + y1 * ih + pull(y1, false));
+        const l = Math.round(area.x + padding + at(x0, iw, true));
+        const r = Math.round(area.x + padding + at(x1, iw, false));
+        const t = Math.round(area.y + padding + at(y0, ih, true));
+        const b = Math.round(area.y + padding + at(y1, ih, false));
         api.frame({ x: l, y: t, w: r - l, h: b - t, name: `${name} ${i + 1}` }, p);
       });
     },
@@ -154,6 +154,7 @@ function make({ id, name, description, tags, slides, aspect, bg = solid('#ffffff
         tags,
         canvas: { slideCount: slides, aspect, customHeightPx: 1350, slideWidthPx: SW, background: bg },
         layers,
+        grids: {},
         createdAt: CREATED,
       };
     },

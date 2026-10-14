@@ -7,8 +7,9 @@
  * subtrees are shared structurally (cheap change detection for the renderer).
  */
 import { canvasSize } from './geometry';
+import { gridFrameRects, syncGridArea } from './gridGroup';
 import { MAX_SLIDES, MIN_SLIDES } from './schema';
-import type { AssetMeta, CanvasSettings, Layer, LayerPatch, Project } from './types';
+import type { AssetMeta, CanvasSettings, GridGroup, Layer, LayerPatch, Project } from './types';
 
 export type Op =
   | { op: 'addLayer'; layer: Layer; index?: number }
@@ -20,6 +21,8 @@ export type Op =
   | { op: 'addAsset'; id: string; meta: AssetMeta }
   | { op: 'removeAsset'; id: string }
   | { op: 'rename'; name: string }
+  /** Set (or with `grid: null` delete) the grid group `id`. Frames are not touched. */
+  | { op: 'setGrid'; id: string; grid: GridGroup | null }
   | { op: 'batch'; ops: Op[] };
 
 export interface CommandResult {
@@ -115,13 +118,24 @@ export function removeAsset(project: Project, id: string): CommandResult {
   return { project: { ...project, assets }, inverse: { op: 'addAsset', id, meta: prev } };
 }
 
+/** Set or delete (null) a grid group record. Never touches layers; cells may reference missing frames. */
+export function setGrid(project: Project, id: string, grid: GridGroup | null): CommandResult {
+  const prev = project.grids[id] ?? null;
+  const grids = { ...project.grids };
+  if (grid) grids[id] = grid;
+  else delete grids[id];
+  return { project: { ...project, grids }, inverse: { op: 'setGrid', id, grid: prev } };
+}
+
 /**
  * Change slide count / aspect / width / background. By default layers keep
  * their panorama coordinates. With `fitBackgrounds`, background layers that
  * exactly covered the old canvas are resized to cover the new one. With
  * `fitLayers`, a change of slide size (aspect, custom height, slide width)
  * rescales the layout: frames stretch with the slide (grids keep filling it)
- * and every other layer keeps its size but moves with its center.
+ * and every other layer keeps its size but moves with its center. Frames that
+ * belong to a grid group are laid out from the group instead: its area is
+ * scaled and the frames follow it (gutter and padding stay in px).
  */
 export function setCanvas(
   project: Project,
@@ -147,7 +161,37 @@ export function setCanvas(
   const scaleLayers = fitLayers && (sx !== 1 || sy !== 1);
   const r2 = (v: number) => Math.round(v * 100) / 100;
   const inverses: Op[] = [];
+  const gridded = new Set<string>();
+  if (scaleLayers) {
+    for (const [gid, g] of Object.entries(project.grids)) {
+      const synced = syncGridArea(project, g);
+      const a = synced.area;
+      const scaled: GridGroup = {
+        ...synced,
+        area: { x: r2(a.x * sx), y: r2(a.y * sy), width: r2(a.width * sx), height: r2(a.height * sy) },
+      };
+      let rects;
+      try {
+        rects = gridFrameRects(scaled);
+      } catch {
+        continue; // does not fit any more: leave these frames to plain scaling
+      }
+      const gr = setGrid(current, gid, scaled);
+      current = gr.project;
+      inverses.push(gr.inverse);
+      scaled.cells.forEach((cell, i) => {
+        const frame = current.layers.find((l) => l.id === cell.frameId && l.type === 'frame');
+        if (!frame || gridded.has(frame.id)) return;
+        gridded.add(frame.id);
+        const { x, y, width, height } = rects[i]!;
+        const r = updateLayer(current, frame.id, { x, y, width, height });
+        current = r.project;
+        inverses.push(r.inverse);
+      });
+    }
+  }
   for (const l of project.layers) {
+    if (gridded.has(l.id)) continue;
     let patch: LayerPatch | null = null;
     if (l.type === 'background' && l.x === 0 && l.y === 0 && l.width === oldSize.width && l.height === oldSize.height) {
       if (fitBackgrounds) patch = { width: newSize.width, height: newSize.height };
@@ -205,6 +249,8 @@ export function applyOp(project: Project, op: Op): CommandResult {
       return removeAsset(project, op.id);
     case 'rename':
       return renameProject(project, op.name);
+    case 'setGrid':
+      return setGrid(project, op.id, op.grid);
     case 'batch':
       return batch(project, op.ops);
   }

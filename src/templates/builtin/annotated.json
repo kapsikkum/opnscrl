@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "annotated",
   "name": "Annotated",
   "description": "Photos with marker circles, arrows and handwritten callouts.",
@@ -461,5 +461,6 @@
       }
     }
   ],
+  "grids": {},
   "createdAt": 1767225600000
 }

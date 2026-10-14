@@ -29,6 +29,8 @@ import type {
   drawingPropsSchema,
   strokeSchema,
   textBackgroundSchema,
+  gridCellSchema,
+  gridGroupSchema,
 } from './schema';
 
 export type Aspect = z.infer<typeof aspectSchema>;
@@ -66,6 +68,9 @@ export type Layer = z.infer<typeof layerSchema>;
 export type LayerType = Layer['type'];
 export type LayerOf<T extends LayerType> = Extract<Layer, { type: T }>;
 export type PropsOf<T extends LayerType> = LayerOf<T>['props'];
+
+export type GridCell = z.infer<typeof gridCellSchema>;
+export type GridGroup = z.infer<typeof gridGroupSchema>;
 
 export type Project = z.infer<typeof projectSchema>;
 

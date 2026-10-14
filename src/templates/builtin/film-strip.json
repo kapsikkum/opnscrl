@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "film-strip",
   "name": "Film strip",
   "description": "A continuous strip of film frames with sprocket holes running across four slides.",
@@ -373,5 +373,6 @@
       }
     }
   ],
+  "grids": {},
   "createdAt": 1767225600000
 }

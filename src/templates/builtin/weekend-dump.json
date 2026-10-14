@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "weekend-dump",
   "name": "Weekend dump",
   "description": "Lots of photos across two slides with a hand-drawn scribble title.",
@@ -24,7 +24,7 @@
       "type": "frame",
       "x": 40,
       "y": 260,
-      "width": 610,
+      "width": 612,
       "height": 1050,
       "rotation": 0,
       "opacity": 1,
@@ -59,9 +59,9 @@
     {
       "id": "weekend-dump-2",
       "type": "frame",
-      "x": 666,
+      "x": 668,
       "y": 260,
-      "width": 374,
+      "width": 372,
       "height": 517,
       "rotation": 0,
       "opacity": 1,
@@ -96,9 +96,9 @@
     {
       "id": "weekend-dump-3",
       "type": "frame",
-      "x": 666,
+      "x": 668,
       "y": 793,
-      "width": 374,
+      "width": 372,
       "height": 517,
       "rotation": 0,
       "opacity": 1,
@@ -209,7 +209,7 @@
       "type": "frame",
       "x": 1120,
       "y": 683,
-      "width": 325,
+      "width": 323,
       "height": 627,
       "rotation": 0,
       "opacity": 1,
@@ -244,9 +244,9 @@
     {
       "id": "weekend-dump-7",
       "type": "frame",
-      "x": 1461,
+      "x": 1459,
       "y": 683,
-      "width": 318,
+      "width": 322,
       "height": 627,
       "rotation": 0,
       "opacity": 1,
@@ -281,9 +281,9 @@
     {
       "id": "weekend-dump-8",
       "type": "frame",
-      "x": 1795,
+      "x": 1797,
       "y": 683,
-      "width": 325,
+      "width": 323,
       "height": 627,
       "rotation": 0,
       "opacity": 1,
@@ -512,5 +512,6 @@
       }
     }
   ],
+  "grids": {},
   "createdAt": 1767225600000
 }

@@ -9,4 +9,5 @@ export * from './project';
 export { createId } from './id';
 export * from './grid';
 export * from './gridLayouts';
+export * from './gridGroup';
 export * from './slides';

@@ -8,7 +8,7 @@
  */
 import { z } from 'zod';
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export const ASPECTS = ['4:5', '1:1', '9:16', '3:4', '16:9', '2:3', '4:3', '1.91:1', 'custom'] as const;
 export const aspectSchema = z.enum(ASPECTS);
@@ -264,6 +264,33 @@ export const canvasSchema = z.object({
   background: fillSchema,
 });
 
+// ---------- Grid groups ----------
+const unit = z.number().min(0).max(1);
+
+/** One cell of a grid group: the frame it drives and its box in the grid's unit square. */
+export const gridCellSchema = z.object({
+  /** Layer id of the frame this cell positions. May dangle (the frame was deleted); such cells are skipped. */
+  frameId: z.string().min(1),
+  /** [x0, y0, x1, y1] in 0..1 of the grid area (inside the padding). */
+  box: z.tuple([unit, unit, unit, unit]),
+  /** Floating cell (overlap / picture-in-picture): not split by gutters, no dividers. */
+  inset: z.boolean().optional(),
+});
+
+/**
+ * A grid group ties frame layers to a layout. The frames stay ordinary layers;
+ * the group is the recipe (area + gutter + padding + cells) that positions them,
+ * so gutter, padding, corner radius and dividers can be edited afterwards.
+ */
+export const gridGroupSchema = z.object({
+  /** Panorama rectangle the layout fills (padding applies inside it). */
+  area: z.object({ x: z.number(), y: z.number(), width: z.number().min(0), height: z.number().min(0) }),
+  gutter: z.number().min(0),
+  padding: z.number().min(0),
+  cornerRadius: z.number().min(0),
+  cells: z.array(gridCellSchema),
+});
+
 export const projectSchema = z
   .object({
     id: z.string().min(1),
@@ -272,6 +299,8 @@ export const projectSchema = z
     canvas: canvasSchema,
     layers: z.array(layerSchema),
     assets: z.record(z.string(), assetMetaSchema),
+    /** Grid groups by id (see gridGroupSchema). */
+    grids: z.record(z.string(), gridGroupSchema),
     createdAt: z.number(),
     updatedAt: z.number(),
   })

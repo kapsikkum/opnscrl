@@ -72,6 +72,12 @@ describe('grid layouts', () => {
     }
   });
 
+  it('gives equal fractions equal sizes with one gutter between cells', () => {
+    const cells = layoutCells(area, getGridLayout('thirds-v')!.cells, 30, 0);
+    expect(new Set(cells.map((c) => c.width)).size).toBe(1);
+    expect(cells[1]!.x - (cells[0]!.x + cells[0]!.width)).toBe(30);
+  });
+
   it('defaults to square corners', () => {
     const p = createProject({ slideCount: 1 });
     const [f] = gridLayers(p, { rows: 1, cols: 1, gutter: 0, padding: 0, area: { slide: 0 }, layout: 'single' });

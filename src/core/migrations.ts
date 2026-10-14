@@ -83,6 +83,9 @@ migrations[3] = (doc) => {
   return { ...doc, layers };
 };
 
+/** v4 -> v5: grid groups. Existing projects have none (their grid frames stay loose). */
+migrations[4] = (doc) => ({ ...doc, grids: isObj(doc.grids) ? doc.grids : {} });
+
 export function detectVersion(doc: RawDoc): number {
   const v = doc.schemaVersion;
   return typeof v === 'number' && Number.isInteger(v) && v >= 0 ? v : 0;

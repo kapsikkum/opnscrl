@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "story-5",
   "name": "Five-slide story",
   "description": "A dotted path with an arrow that connects five chapters, one photo each.",
@@ -492,5 +492,6 @@
       }
     }
   ],
+  "grids": {},
   "createdAt": 1767225600000
 }

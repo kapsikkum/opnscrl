@@ -88,6 +88,7 @@ export function projectToTemplate(project: Project, opts: ProjectToTemplateOptio
     tags: opts.tags ?? [],
     canvas: clone(project.canvas),
     layers,
+    grids: clone(project.grids),
     ...(assets ? { assets } : {}),
     createdAt: opts.now ?? Date.now(),
   };
@@ -101,7 +102,11 @@ export interface TemplateToProjectOptions {
   onAsset?: (assetId: string, asset: TemplateAsset) => void;
 }
 
-/** Instantiate a template as a new project: fresh project, layer and asset ids. */
+/**
+ * Instantiate a template as a new project: fresh project, layer, grid and asset
+ * ids. Grid cells are remapped to the new layer ids (a cell whose frame is not
+ * in the template gets a fresh dangling id, which keeps the cell list intact).
+ */
 export function templateToProject(template: Template, opts: TemplateToProjectOptions = {}): Project {
   const now = opts.now ?? Date.now();
   const assetIds = new Map<string, string>();
@@ -112,9 +117,11 @@ export function templateToProject(template: Template, opts: TemplateToProjectOpt
     assets[id] = { mime: a.mime, w: a.w, h: a.h };
     opts.onAsset?.(id, a);
   }
+  const layerIds = new Map<string, string>();
   const layers = template.layers.map((l): Layer => {
     const copy = clone(l);
     copy.id = createId('lyr');
+    layerIds.set(l.id, copy.id);
     if ((copy.type === 'image' || copy.type === 'frame') && copy.props.assetId) {
       const mapped = assetIds.get(copy.props.assetId);
       copy.props.assetId = mapped ?? (copy.type === 'image' ? '' : null);
@@ -124,6 +131,12 @@ export function templateToProject(template: Template, opts: TemplateToProjectOpt
     }
     return copy;
   });
+  const grids: Project['grids'] = {};
+  for (const grid of Object.values(template.grids ?? {})) {
+    const g = clone(grid);
+    g.cells = g.cells.map((c) => ({ ...c, frameId: layerIds.get(c.frameId) ?? createId('lyr') }));
+    grids[createId('grd')] = g;
+  }
   return validateProject({
     id: createId('prj'),
     name: opts.name ?? template.name,
@@ -131,6 +144,7 @@ export function templateToProject(template: Template, opts: TemplateToProjectOpt
     canvas: clone(template.canvas),
     layers,
     assets,
+    grids,
     createdAt: now,
     updatedAt: now,
   });

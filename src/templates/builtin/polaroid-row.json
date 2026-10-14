@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "polaroid-row",
   "name": "Polaroid row",
   "description": "Four tilted instant-print cards scattered across three slides, overlapping the seams.",
@@ -363,5 +363,6 @@
       }
     }
   ],
+  "grids": {},
   "createdAt": 1767225600000
 }

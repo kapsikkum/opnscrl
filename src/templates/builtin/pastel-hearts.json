@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "pastel-hearts",
   "name": "Pastel hearts",
   "description": "Soft pastel slides with rounded 2x2 grids and little hearts.",
@@ -468,5 +468,6 @@
       }
     }
   ],
+  "grids": {},
   "createdAt": 1767225600000
 }

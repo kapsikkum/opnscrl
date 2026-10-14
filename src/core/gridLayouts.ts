@@ -69,8 +69,6 @@ export function getGridLayout(id: string): GridLayout | undefined {
   return byId.get(id);
 }
 
-const EPS = 1e-6;
-
 /**
  * Place layout cells in `area`. Outer edges sit `padding` inside the area;
  * edges shared with another cell are pulled back by half the gutter. Edges are
@@ -81,13 +79,15 @@ export function layoutCells(area: Rect, cells: readonly LayoutCell[], gutter: nu
   const iw = area.width - 2 * padding;
   const ih = area.height - 2 * padding;
   if (iw <= 0 || ih <= 0) throw new RangeError('Padding leaves no room for cells');
-  const half = gutter / 2;
+  // Tiled cells: a start edge at v sits at v * (size + gutter) and an end edge
+  // at v * (size + gutter) - gutter, so equal fractions give equal cells and
+  // every shared edge has exactly one gutter between its neighbours.
+  const at = (v: number, size: number, isStart: boolean, inset?: boolean) => (inset ? v * size : v * (size + gutter) - (isStart ? 0 : gutter));
   return cells.map(({ box: [x0, y0, x1, y1], inset }) => {
-    const pull = (v: number, isStart: boolean) => (inset || v <= EPS || v >= 1 - EPS ? 0 : isStart ? half : -half);
-    const l = Math.round(area.x + padding + x0 * iw + pull(x0, true));
-    const r = Math.round(area.x + padding + x1 * iw + pull(x1, false));
-    const t = Math.round(area.y + padding + y0 * ih + pull(y0, true));
-    const b = Math.round(area.y + padding + y1 * ih + pull(y1, false));
+    const l = Math.round(area.x + padding + at(x0, iw, true, inset));
+    const r = Math.round(area.x + padding + at(x1, iw, false, inset));
+    const t = Math.round(area.y + padding + at(y0, ih, true, inset));
+    const b = Math.round(area.y + padding + at(y1, ih, false, inset));
     if (r - l < 1 || b - t < 1) throw new RangeError('Gutter is too large for this layout');
     return { x: l, y: t, width: r - l, height: b - t };
   });

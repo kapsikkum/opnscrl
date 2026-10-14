@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "gradient-gallery",
   "name": "Gradient gallery",
   "description": "Four leaf-shaped photos floating on a sunset gradient.",
@@ -282,5 +282,6 @@
       }
     }
   ],
+  "grids": {},
   "createdAt": 1767225600000
 }

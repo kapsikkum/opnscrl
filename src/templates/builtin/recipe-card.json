@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "recipe-card",
   "name": "Recipe card",
   "description": "Hero dish, an ingredients list, and three steps with photos.",
@@ -563,5 +563,6 @@
       }
     }
   ],
+  "grids": {},
   "createdAt": 1767225600000
 }

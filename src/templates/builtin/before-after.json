@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "before-after",
   "name": "Before / after",
   "description": "Two slides side by side with labels and an arrow across the seam.",
@@ -200,5 +200,6 @@
       }
     }
   ],
+  "grids": {},
   "createdAt": 1767225600000
 }
