@@ -5,10 +5,11 @@
  */
 import type { Op } from '../core/commands';
 import { slideRects } from '../core/geometry';
-import { gridOps, type GridArgs } from '../core/grid';
+import { createGridOps, relayoutOps, ungroupOps, type GridArgs } from '../core/grid';
+import { gridFrameIds, syncGridArea } from '../core/gridGroup';
 import { createId } from '../core/id';
 import { insertSlideOps, layerSlideIndex, layersOnSlide, moveSlideOps, removeSlideOps } from '../core/slides';
-import type { CanvasSettings, Fill, Layer, LayerPatch, Project } from '../core/types';
+import type { CanvasSettings, Fill, GridGroup, Layer, LayerPatch, Project } from '../core/types';
 import { createLayer } from '../layers';
 import type { Editor } from '../state/editor';
 import { prepareImage, putAsset } from '../storage';
@@ -77,11 +78,60 @@ export function addFrame(editor: Editor, slide: number): void {
 
 export function addGrid(editor: Editor, args: GridArgs): string[] {
   const p = editor.project.peek();
-  const ops = gridOps(p, args);
+  const ops = createGridOps(p, args);
   editor.dispatch({ op: 'batch', ops });
   const ids = ops.flatMap((o) => (o.op === 'addLayer' ? [o.layer.id] : []));
   editor.select(ids);
   return ids;
+}
+
+export type GridPatch = Partial<Pick<GridGroup, 'gutter' | 'padding' | 'cornerRadius'>>;
+
+/**
+ * Change a grid's gutter / padding / corner radius and relayout its frames.
+ * Starts from where the frames actually are (syncGridArea), so a moved grid does
+ * not snap back. Consecutive calls for the same fields share one undo step.
+ * Throws nothing: a patch that cannot be laid out (cells collapse) is ignored.
+ */
+export function relayoutGrid(editor: Editor, gridId: string, patch: GridPatch): void {
+  const p = editor.project.peek();
+  const stored = p.grids[gridId];
+  if (!stored) return;
+  const next = { ...syncGridArea(p, stored), ...patch };
+  let ops: Op[];
+  try {
+    ops = relayoutOps(p, gridId, next);
+  } catch {
+    return;
+  }
+  editor.dispatch({ op: 'batch', ops }, { coalesceKey: `grid:${gridId}:${Object.keys(patch).join(',')}` });
+}
+
+/** Commit a grid whose divider was dragged (already synced and edited): one undoable relayout. */
+export function moveGridDivider(editor: Editor, gridId: string, grid: GridGroup): void {
+  const p = editor.project.peek();
+  if (!p.grids[gridId]) return;
+  let ops: Op[];
+  try {
+    ops = relayoutOps(p, gridId, grid);
+  } catch {
+    return;
+  }
+  editor.dispatch({ op: 'batch', ops });
+  editor.history.breakCoalescing();
+}
+
+/** Dissolve a grid: its frames stay as ordinary layers. */
+export function ungroupGrid(editor: Editor, gridId: string): void {
+  if (!editor.project.peek().grids[gridId]) return;
+  editor.dispatch({ op: 'batch', ops: ungroupOps(editor.project.peek(), gridId) });
+}
+
+/** Select every existing frame of a grid. */
+export function selectGrid(editor: Editor, gridId: string): void {
+  const p = editor.project.peek();
+  const grid = p.grids[gridId];
+  if (grid) editor.select(gridFrameIds(p, grid));
 }
 
 // ---------- photos ----------

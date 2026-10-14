@@ -8,6 +8,7 @@ import {
   addText,
   deleteSelected,
   duplicateSelected,
+  moveGridDivider,
   nudgeSelected,
   selectAll,
   slideOfLayer,
@@ -15,6 +16,9 @@ import {
 import { fontsVersion } from '../app/fonts';
 import { assetResolver, errorMessage, toast } from '../app/services';
 import type { Session } from '../app/session';
+import { applyOp, type Op } from '../core/commands';
+import { gridFromBounds, selectionGridState } from '../core/gridGroup';
+import { relayoutOps } from '../core/grid';
 import { createRenderer, type Renderer } from '../render';
 import { Icon } from './Icon';
 import { goHome } from './nav';
@@ -80,10 +84,26 @@ export function Editor({ session }: { session: Session }) {
       if (ids.length === 1) setTab('edit');
     });
     const offEnd = renderer.on('transform-end', ({ kind, changes }) => {
-      const ops = changes.map((c) => ({ op: 'updateLayer' as const, id: c.id, patch: c.patch }));
+      const ops: Op[] = changes.map((c) => ({ op: 'updateLayer' as const, id: c.id, patch: c.patch }));
+      // A whole grid moved or resized: re-derive the grid from where its frames landed and relayout
+      // in the same batch, so gutters and cell edges stay pixel-crisp.
+      const before = editor.project.peek();
+      const whole = selectionGridState(before, changes.map((c) => c.id));
+      if (whole?.mode === 'whole') {
+        try {
+          const scratch = applyOp(before, { op: 'batch', ops }).project;
+          const stored = scratch.grids[whole.gridId];
+          if (stored) ops.push(...relayoutOps(scratch, whole.gridId, gridFromBounds(scratch, stored)));
+        } catch {
+          /* cannot lay out: keep the plain frame updates (the grid self-heals on its next edit) */
+        }
+      }
       const key = `${kind}:${changes.map((c) => c.id).join(',')}`;
       editor.dispatch(ops.length === 1 ? ops[0]! : { op: 'batch', ops }, { coalesceKey: key });
       editor.history.breakCoalescing();
+    });
+    const offDivider = renderer.on('grid-divider', ({ gridId, grid }) => {
+      moveGridDivider(editor, gridId, grid);
     });
     const offActivate = renderer.on('activate', (id) => {
       const layer = editor.project.peek().layers.find((l) => l.id === id);
@@ -129,6 +149,7 @@ export function Editor({ session }: { session: Session }) {
     return () => {
       offSelect();
       offEnd();
+      offDivider();
       offActivate();
       offStroke();
       offErase();

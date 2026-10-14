@@ -225,3 +225,36 @@ export function moveDivider(grid: GridGroup, divider: GridDivider, newValue: num
   }
   return { ...grid, cells };
 }
+
+// ---------- selection ----------
+
+/** Ids of the cell frames of a grid that still exist, in cell order. */
+export function gridFrameIds(project: Project, grid: GridGroup): string[] {
+  const frames = frameMap(project);
+  return grid.cells.map((c) => c.frameId).filter((id) => frames.has(id));
+}
+
+export interface GridSelectionState {
+  gridId: string;
+  grid: GridGroup;
+  /** `whole`: the selection is exactly the grid's existing frames. `cell`: one cell of a multi-cell grid. */
+  mode: 'whole' | 'cell';
+}
+
+/**
+ * How a selection relates to grid groups. `whole` when the selected ids are
+ * exactly the existing frames of one grid (a grid left with a single frame
+ * counts as whole); `cell` when a single frame of a grid with more than one
+ * existing frame is selected; otherwise null (including partial selections).
+ */
+export function selectionGridState(project: Project, selection: readonly string[]): GridSelectionState | null {
+  if (!selection.length) return null;
+  const first = gridOfFrame(project, selection[0]!);
+  if (!first) return null;
+  const ids = gridFrameIds(project, first.grid);
+  if (!ids.length) return null;
+  const sel = new Set(selection);
+  if (sel.size === ids.length && ids.every((id) => sel.has(id))) return { gridId: first.id, grid: first.grid, mode: 'whole' };
+  if (sel.size === 1) return { gridId: first.id, grid: first.grid, mode: 'cell' };
+  return null;
+}

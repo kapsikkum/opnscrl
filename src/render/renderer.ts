@@ -1,10 +1,12 @@
 import Konva from 'konva';
 import { canvasSize, layerBounds, slideRects, type Rect } from '../core/geometry';
-import type { CanvasSettings, Layer, LayerPatch, Project } from '../core/types';
+import { gridDividers, gridFrameIds, selectionGridState, syncGridArea, type GridDivider } from '../core/gridGroup';
+import type { CanvasSettings, GridGroup, Layer, LayerPatch, Project } from '../core/types';
 import { LAYER_NAME } from '../layers/shared/base';
 import type { AssetResolver } from '../layers/types';
 import { createAssetCache } from './assets';
 import { createCanvasBackground, updateCanvasBackground } from './canvasBackground';
+import { dividerAxisPx, dividerHandlePoint, dragDivider, type DividerDrag } from './gridHandles';
 import { defaultGuides, rebuildGuides, type GuideOptions } from './guides';
 import { Reconciler } from './reconcile';
 import {
@@ -51,6 +53,17 @@ export interface RendererEvents {
   stroke: number[];
   /** A finished eraser path while the draw tool is in eraser mode (canvas px). */
   erase: number[];
+  /**
+   * A grid divider was dragged and released: `grid` is the whole grid with the
+   * divider moved (already synced to where the frames are). The host turns it
+   * into one undoable relayout; the renderer never mutates the model.
+   */
+  'grid-divider': GridDividerEvent;
+}
+
+export interface GridDividerEvent {
+  gridId: string;
+  grid: GridGroup;
 }
 
 /** Draw-mode settings; widths are in canvas px. */
@@ -147,7 +160,10 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     boundBoxFunc: (oldBox, newBox) => resizeBound(oldBox, newBox),
   });
   const snapGroup = new Konva.Group({ listening: false });
-  uiLayer.add(guidesGroup, snapGroup, transformer);
+  const handlesGroup = new Konva.Group();
+  // outline for a lone grid cell (it has no transformer: it cannot be resized or torn out of its grid)
+  const cellOutline = new Konva.Rect({ visible: false, listening: false, stroke: '#2f7cf6', strokeWidth: 2, strokeScaleEnabled: false });
+  uiLayer.add(guidesGroup, snapGroup, cellOutline, handlesGroup, transformer);
 
   // ---- state ----
   let project: Project | null = null;
@@ -163,6 +179,7 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     activate: new Set(),
     stroke: new Set(),
     erase: new Set(),
+    'grid-divider': new Set(),
   };
   let snapping = true;
   let editingId: string | null = null;
@@ -201,12 +218,32 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     return !!l && !l.locked && !l.hidden;
   }
 
+  /** frameId -> gridId for every cell of every grid group (rebuilt on each setProject). */
+  let frameGrid = new Map<string, string>();
+  /** The selected frame while it is the only selection of a multi-cell grid (not draggable, no transformer). */
+  let soleCell: string | null = null;
+  let collapseOnClick: string | null = null;
+
+  function setSoleCell(id: string | null): void {
+    if (soleCell && soleCell !== id) reconciler.getNode(soleCell)?.draggable(isInteractive(soleCell));
+    soleCell = id;
+    if (id) reconciler.getNode(id)?.draggable(false);
+  }
+
+  /** Existing, interactive frames of a grid. */
+  function gridMembers(gridId: string): string[] {
+    const grid = project?.grids[gridId];
+    return project && grid ? gridFrameIds(project, grid).filter(isInteractive) : [];
+  }
+
   function attachTransformer(): void {
     if (drawTool) return;
+    const st = project ? selectionGridState(project, selection) : null;
+    const lone = st?.mode === 'cell' ? selection[0]! : null;
     const nodes: Konva.Node[] = [];
     let hasText = false;
     for (const id of selection) {
-      if (!isInteractive(id)) continue;
+      if (!isInteractive(id) || id === lone) continue;
       const n = reconciler.getNode(id);
       if (!n) continue;
       nodes.push(n);
@@ -217,8 +254,22 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
         ? ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-left', 'middle-right']
         : ['top-left', 'top-center', 'top-right', 'middle-left', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'],
     );
+    // grid cells never rotate: the grid stays axis-aligned so gutters stay crisp
+    transformer.rotateEnabled(!selection.some((id) => frameGrid.has(id)));
     transformer.nodes(nodes);
+    setSoleCell(lone && isInteractive(lone) ? lone : null);
+    updateCellOutline();
+    rebuildHandles();
     uiLayer.batchDraw();
+  }
+
+  function updateCellOutline(layerOverride?: Layer): void {
+    const layer = layerOverride ?? (soleCell ? layerById.get(soleCell) : undefined);
+    if (!soleCell || !layer || drawTool) {
+      cellOutline.visible(false);
+      return;
+    }
+    cellOutline.setAttrs({ visible: true, x: layer.x, y: layer.y, width: layer.width, height: layer.height, rotation: layer.rotation });
   }
 
   function pruneSelection(): void {
@@ -243,6 +294,10 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     project = next;
     version++;
     layerById = new Map(next.layers.map((l) => [l.id, l]));
+    frameGrid = new Map();
+    for (const [gridId, grid] of Object.entries(next.grids ?? {})) {
+      for (const cell of grid.cells) if (!frameGrid.has(cell.frameId)) frameGrid.set(cell.frameId, gridId);
+    }
 
     if (prevCanvas !== next.canvas) {
       const sizeChanged =
@@ -272,6 +327,14 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
       n = n.getParent();
     }
     return null;
+  }
+  function insideHandles(node: Konva.Node): boolean {
+    let n: Konva.Node | null = node;
+    while (n) {
+      if (n === handlesGroup) return true;
+      n = n.getParent();
+    }
+    return false;
   }
   function insideTransformer(node: Konva.Node): boolean {
     let n: Konva.Node | null = node;
@@ -311,7 +374,8 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
       beginPan();
       return;
     }
-    if (insideTransformer(target)) return;
+    if (insideTransformer(target) || insideHandles(target)) return;
+    collapseOnClick = null;
     const group = findLayerGroup(target);
     if (!group) {
       if (selection.length) userSelect([]);
@@ -322,9 +386,29 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     const evt = e.evt as MouseEvent;
     if (evt.shiftKey || evt.ctrlKey || evt.metaKey) {
       userSelect(selection.includes(id) ? selection.filter((s) => s !== id) : [...selection, id]);
-    } else if (!selection.includes(id)) {
-      userSelect([id]);
+    } else {
+      const gridId = frameGrid.get(id);
+      if (!gridId) {
+        if (!selection.includes(id)) userSelect([id]);
+        return;
+      }
+      // Grid cells select as a group. A press on a cell of the already-selected grid waits
+      // for the release: a drag moves the whole grid, a click narrows to that one cell.
+      const members = gridMembers(gridId);
+      if (members.length === selection.length && members.every((m) => selection.includes(m))) {
+        collapseOnClick = id;
+      } else if (selection.length === 1 && frameGrid.get(selection[0]!) === gridId) {
+        if (selection[0] !== id) userSelect([id]); // hop between cells of the grid being edited
+      } else if (!selection.includes(id)) {
+        userSelect(members.length ? members : [id]);
+      }
     }
+  });
+  stage.on('click tap', (e) => {
+    const id = collapseOnClick;
+    collapseOnClick = null;
+    if (!id || insideTransformer(e.target)) return;
+    if (findLayerGroup(e.target)?.id() === id) userSelect([id]);
   });
 
   // ---- interaction: drag (multi-select aware, with snapping) ----
@@ -354,6 +438,17 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
   }
 
   world.on('dragstart', (e) => {
+    collapseOnClick = null;
+    if (e.target.id() === soleCell) {
+      // a lone grid cell stays in its grid (the press that selected it may have armed a drag)
+      dragAnchor = null;
+      dragStart = new Map();
+      e.target.stopDrag();
+      const l = layerById.get(e.target.id());
+      if (l) e.target.position({ x: l.x, y: l.y });
+      return;
+    }
+    handlesGroup.visible(false);
     dragAnchor = e.target;
     dragStart = new Map();
     const ids = selection.includes(e.target.id()) ? selection.filter(isInteractive) : [e.target.id()];
@@ -465,6 +560,7 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
   }
 
   transformer.on('transformstart', () => {
+    handlesGroup.visible(false);
     live = new Map();
     for (const n of transformer.nodes()) {
       const layer = layerById.get(n.id());
@@ -533,14 +629,129 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     if (!changes.length) return;
     const v = version;
     emit('transform-end', { kind, changes });
-    // The renderer never owns the model: if the host did not apply the change,
-    // snap the touched nodes back to the model state.
+    resyncIfUnchanged(v, changes.map((c) => c.id));
+  }
+
+  /**
+   * The renderer never owns the model: if the host did not apply the change
+   * (setProject was not called since `v`), snap the touched nodes back to the model state.
+   */
+  function resyncIfUnchanged(v: number, ids: readonly string[]): void {
     queueMicrotask(() => {
       if (version !== v || !project) return;
-      reconciler.sync(project.layers, new Set(changes.map((c) => c.id)));
+      reconciler.sync(project.layers, new Set(ids));
       attachTransformer();
       contentLayer.batchDraw();
     });
+  }
+
+  // ---- grid divider handles ----
+  const HANDLE_LONG = 40;
+  const HANDLE_SHORT = 6;
+  let handleDrag: { base: GridGroup; divider: GridDivider; grab: number; last: DividerDrag | null } | null = null;
+
+  function setHandleCursor(cursor: string): void {
+    if (!drawTool) container.style.cursor = cursor;
+  }
+
+  function previewDivider(base: GridGroup, drag: DividerDrag): void {
+    for (const [index, rect] of drag.rects) {
+      const id = base.cells[index]?.frameId;
+      const layer = id ? layerById.get(id) : undefined;
+      if (!id || !layer || layer.type !== 'frame') continue;
+      const next = { ...layer, ...rect } as Layer;
+      reconciler.preview(id, next);
+      if (id === soleCell) updateCellOutline(next);
+    }
+    contentLayer.batchDraw();
+  }
+
+  function makeHandle(gridId: string, base: GridGroup, divider: GridDivider): Konva.Group | null {
+    const pt = dividerHandlePoint(base, divider);
+    if (!pt) return null;
+    const vertical = divider.axis === 'x'; // pill is a vertical bar for a divider on the x axis
+    const w = vertical ? HANDLE_SHORT : HANDLE_LONG;
+    const h = vertical ? HANDLE_LONG : HANDLE_SHORT;
+    const k = 1 / stage.scaleX();
+    const group = new Konva.Group({ x: pt.x, y: pt.y, scaleX: k, scaleY: k, draggable: true, name: 'grid-handle' });
+    // generous invisible hit area around the thin pill
+    group.add(new Konva.Rect({ x: -w / 2 - 8, y: -h / 2 - 8, width: w + 16, height: h + 16, fill: 'rgba(0,0,0,0.001)' }));
+    group.add(
+      new Konva.Rect({
+        x: -w / 2,
+        y: -h / 2,
+        width: w,
+        height: h,
+        cornerRadius: HANDLE_SHORT / 2,
+        fill: '#ffffff',
+        stroke: '#2f7cf6',
+        strokeWidth: 1.5,
+        strokeScaleEnabled: false,
+        listening: false,
+      }),
+    );
+    const cursor = vertical ? 'ew-resize' : 'ns-resize';
+    group.on('mouseenter', () => setHandleCursor(cursor));
+    group.on('mouseleave', () => {
+      if (!handleDrag) setHandleCursor('');
+    });
+    group.on('dragstart', () => {
+      const p = pointer();
+      if (!p) return;
+      const along = divider.axis === 'x' ? p.x : p.y;
+      handleDrag = { base, divider, grab: along - dividerAxisPx(base, divider), last: null };
+      clearSnapGuides();
+    });
+    group.on('dragmove', () => {
+      const p = pointer();
+      if (!handleDrag || !p) return;
+      const along = (divider.axis === 'x' ? p.x : p.y) - handleDrag.grab;
+      const drag = dragDivider(handleDrag.base, handleDrag.divider, along);
+      if (!drag) return;
+      handleDrag.last = drag;
+      previewDivider(handleDrag.base, drag);
+      // stay on the divider's axis, snapped to the clamped gutter centre
+      group.position(drag.handle ?? { x: pt.x, y: pt.y });
+      uiLayer.batchDraw();
+    });
+    group.on('dragend', () => {
+      const d = handleDrag;
+      const v = version;
+      const ids = d ? d.divider.cells.map((c) => d.base.cells[c.index]?.frameId).filter((x): x is string => !!x) : [];
+      if (d?.last && d.last.grid !== d.base) emit('grid-divider', { gridId, grid: d.last.grid });
+      // Not synchronously: the host's setProject would destroy this handle mid-event.
+      queueMicrotask(() => {
+        handleDrag = null;
+        setHandleCursor('');
+        if (project && version === v) {
+          reconciler.sync(project.layers, new Set(ids)); // host did not apply: undo the preview
+          contentLayer.batchDraw();
+        }
+        attachTransformer();
+      });
+    });
+    return group;
+  }
+
+  /** (Re)build the divider handles for the current selection: shown for a whole grid or one of its cells. */
+  function rebuildHandles(): void {
+    if (handleDrag) return; // a handle is mid-drag; rebuilt when it ends
+    handlesGroup.destroyChildren();
+    handlesGroup.visible(true);
+    if (!project || drawTool) return;
+    const st = selectionGridState(project, selection);
+    if (!st) return;
+    const base = syncGridArea(project, st.grid);
+    for (const divider of gridDividers(base)) {
+      const sides = { start: false, end: false };
+      for (const { index, side } of divider.cells) {
+        const id = base.cells[index]?.frameId;
+        if (id && layerById.get(id)?.type === 'frame' && isInteractive(id)) sides[side] = true;
+      }
+      if (!sides.start || !sides.end) continue; // dangling, locked or hidden neighbours
+      const h = makeHandle(st.gridId, base, divider);
+      if (h) handlesGroup.add(h);
+    }
   }
 
   stage.on('dblclick dbltap', (e) => {
@@ -624,8 +835,11 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     world.listening(!tool);
     eraserCursor.visible(false);
     container.style.cursor = tool ? (tool.mode === 'eraser' ? 'cell' : 'crosshair') : '';
-    if (tool) transformer.nodes([]);
-    else attachTransformer();
+    if (tool) {
+      transformer.nodes([]);
+      handlesGroup.destroyChildren();
+      cellOutline.visible(false);
+    } else attachTransformer();
     uiLayer.batchDraw();
   }
 
@@ -633,6 +847,7 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
   function applyViewport(scale: number, x: number, y: number): void {
     stage.scale({ x: scale, y: scale });
     stage.position({ x, y });
+    for (const h of handlesGroup.getChildren()) h.scale({ x: 1 / scale, y: 1 / scale });
     stage.batchDraw();
     for (const cb of [...viewportListeners]) cb();
   }
@@ -697,6 +912,7 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     if (!pinching) {
       pinching = true;
       for (const n of world.getChildren()) n.stopDrag();
+    for (const n of handlesGroup.getChildren()) n.stopDrag();
     }
     if (lastCenter && lastDist) {
       zoomAround(center, stage.scaleX() * (dist / lastDist));
@@ -715,6 +931,7 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
     lastDist = 0;
     lastCenter = null;
     for (const n of world.getChildren()) n.stopDrag();
+    for (const n of handlesGroup.getChildren()) n.stopDrag();
     transformer.stopTransform();
   });
   stage.on('touchend touchcancel', (e) => {
@@ -811,6 +1028,7 @@ export function createRenderer(container: HTMLDivElement, opts: RendererOptions)
       listeners.activate.clear();
       listeners.stroke.clear();
       listeners.erase.clear();
+      listeners['grid-divider'].clear();
       viewportListeners.clear();
       reconciler.destroy();
       stage.destroy();

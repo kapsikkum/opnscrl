@@ -1,6 +1,7 @@
 import { useRef } from 'preact/hooks';
-import { clearPhoto, deleteSelected, duplicateSelected, patchLayer, replacePhoto } from '../app/actions';
+import { clearPhoto, deleteSelected, duplicateSelected, patchLayer, relayoutGrid, replacePhoto, selectGrid, ungroupGrid } from '../app/actions';
 import { errorMessage, toast } from '../app/services';
+import { selectionGridState, type GridSelectionState } from '../core/gridGroup';
 import type { Layer } from '../core/types';
 import { getLayerDefinition } from '../layers';
 import type { Editor } from '../state/editor';
@@ -56,8 +57,29 @@ function PhotoControls({ layer, editor }: { layer: Layer; editor: Editor }) {
   );
 }
 
+function GridSection({ editor, state }: { editor: Editor; state: GridSelectionState }) {
+  const { gridId, grid, mode } = state;
+  return (
+    <section class="insp-section">
+      <h3>Grid</h3>
+      <SliderField label="Gutter" value={grid.gutter} min={0} max={120} step={1} unit="px" onChange={(v) => relayoutGrid(editor, gridId, { gutter: v })} />
+      <SliderField label="Padding" value={grid.padding} min={0} max={240} step={1} unit="px" onChange={(v) => relayoutGrid(editor, gridId, { padding: v })} />
+      <SliderField label="Corners" value={grid.cornerRadius} min={0} max={120} step={1} unit="px" onChange={(v) => relayoutGrid(editor, gridId, { cornerRadius: v })} />
+      <div class="btn-row">
+        {mode === 'cell' ? <button onClick={() => selectGrid(editor, gridId)}>Select grid</button> : null}
+        <button onClick={() => ungroupGrid(editor, gridId)}>Ungroup</button>
+      </div>
+      <p class="muted small">Drag the handles between frames to resize them.</p>
+    </section>
+  );
+}
+
 export function Inspector({ editor }: { editor: Editor }) {
   const selected = editor.selectedLayers.value;
+  const gridState = selectionGridState(
+    editor.project.value,
+    selected.map((l) => l.id),
+  );
   if (selected.length === 0) {
     return (
       <div class="panel-pad">
@@ -70,8 +92,9 @@ export function Inspector({ editor }: { editor: Editor }) {
     return (
       <div class="panel-pad">
         <p>
-          <b>{selected.length} layers selected</b>
+          <b>{gridState ? `Grid · ${selected.length} frames` : `${selected.length} layers selected`}</b>
         </p>
+        {gridState ? <GridSection editor={editor} state={gridState} /> : null}
         <div class="btn-row">
           <button onClick={() => duplicateSelected(editor)}>
             <Icon name="copy" size={18} /> Duplicate
@@ -80,7 +103,9 @@ export function Inspector({ editor }: { editor: Editor }) {
             <Icon name="trash" size={18} /> Delete
           </button>
         </div>
-        <p class="muted small">Drag to move them together. Select a single layer to edit its properties.</p>
+        <p class="muted small">
+          {gridState ? 'Drag to move the whole grid. Click a frame to edit it on its own.' : 'Drag to move them together. Select a single layer to edit its properties.'}
+        </p>
       </div>
     );
   }
@@ -117,6 +142,7 @@ export function Inspector({ editor }: { editor: Editor }) {
           <Icon name="trash" size={18} />
         </button>
       </div>
+      {gridState ? <GridSection editor={editor} state={gridState} /> : null}
       <PhotoControls layer={layer} editor={editor} />
       {def.inspector?.length ? (
         <section class="insp-section">
