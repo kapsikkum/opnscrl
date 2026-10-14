@@ -2,39 +2,61 @@ import { useState } from 'preact/hooks';
 import { addGrid } from '../app/actions';
 import { errorMessage, toast } from '../app/services';
 import type { Session } from '../app/session';
-import { gridCells, gridArea } from '../core/grid';
+import { gridArea, gridArgsCells, type GridArgs } from '../core/grid';
+import { GRID_LAYOUTS, type GridLayout } from '../core/gridLayouts';
 import { Dialog } from './Dialog';
 import { SliderField } from './Fields';
 
-const PRESETS: [number, number][] = [
-  [1, 2],
-  [2, 1],
-  [2, 2],
-  [1, 3],
-  [3, 1],
-  [3, 3],
-  [2, 3],
-  [3, 2],
+const GROUPS: { id: GridLayout['group']; label: string }[] = [
+  { id: 'basic', label: 'Basic' },
+  { id: 'feature', label: 'Feature' },
+  { id: 'mosaic', label: 'Mosaic' },
+  { id: 'panorama', label: 'Across slides' },
 ];
 
+function LayoutThumb({ layout }: { layout: GridLayout }) {
+  return (
+    <svg viewBox="0 0 40 40" aria-hidden="true">
+      {layout.cells.map(({ box: [x0, y0, x1, y1] }, i) => (
+        <rect key={i} x={2 + x0 * 36 + 0.8} y={2 + y0 * 36 + 0.8} width={(x1 - x0) * 36 - 1.6} height={(y1 - y0) * 36 - 1.6} rx={1.5} />
+      ))}
+    </svg>
+  );
+}
+
 export function GridDialog({ session, onClose }: { session: Session; onClose: () => void }) {
+  const [layout, setLayout] = useState<string | null>('quad');
   const [rows, setRows] = useState(2);
   const [cols, setCols] = useState(2);
   const [gutter, setGutter] = useState(24);
   const [padding, setPadding] = useState(48);
+  const [radius, setRadius] = useState(16);
   const [scope, setScope] = useState<'slide' | 'canvas'>('slide');
   const project = session.editor.project.peek();
   const slide = Math.min(session.currentSlide.peek(), project.canvas.slideCount - 1);
-  const args = { rows, cols, gutter, padding, area: scope === 'slide' ? { slide } : ('canvas' as const) };
+  const args: GridArgs = {
+    rows,
+    cols,
+    gutter,
+    padding,
+    cornerRadius: radius,
+    area: scope === 'slide' ? { slide } : 'canvas',
+    ...(layout ? { layout } : {}),
+  };
 
-  let cells: ReturnType<typeof gridCells> = [];
+  let cells: ReturnType<typeof gridArgsCells> = [];
   let problem: string | null = null;
   try {
-    cells = gridCells(gridArea(project, args.area), args);
+    cells = gridArgsCells(project, args);
   } catch (e) {
     problem = errorMessage(e);
   }
   const area = gridArea(project, args.area);
+
+  function pick(l: GridLayout) {
+    setLayout(l.id);
+    if (l.group === 'panorama' && project.canvas.slideCount > 1) setScope('canvas');
+  }
 
   function create() {
     try {
@@ -59,19 +81,35 @@ export function GridDialog({ session, onClose }: { session: Session; onClose: ()
         </>
       }
     >
-      <div class="chips" aria-label="Presets">
-        {PRESETS.map(([r, c]) => (
-          <button key={`${r}x${c}`} class={`chip${r === rows && c === cols ? ' on' : ''}`} onClick={() => (setRows(r), setCols(c))}>
-            {c} x {r}
+      {GROUPS.map((g) => (
+        <div class="layout-group" key={g.id}>
+          <h4>{g.label}</h4>
+          <div class="layout-picker" role="radiogroup" aria-label={`${g.label} layouts`}>
+            {GRID_LAYOUTS.filter((l) => l.group === g.id).map((l) => (
+              <button key={l.id} role="radio" aria-checked={layout === l.id} class={`layout-chip${layout === l.id ? ' on' : ''}`} title={l.label} aria-label={l.label} onClick={() => pick(l)}>
+                <LayoutThumb layout={l} />
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+      <div class="field">
+        <span>Custom grid</span>
+        <div class="seg">
+          <button class={layout === null ? 'on' : ''} aria-pressed={layout === null} onClick={() => setLayout(null)}>
+            {cols} x {rows}
           </button>
-        ))}
+        </div>
       </div>
-      <div class="grid2">
-        <SliderField label="Columns" value={cols} min={1} max={6} step={1} onChange={(v) => setCols(Math.round(v))} />
-        <SliderField label="Rows" value={rows} min={1} max={6} step={1} onChange={(v) => setRows(Math.round(v))} />
-      </div>
+      {layout === null && (
+        <div class="grid2">
+          <SliderField label="Columns" value={cols} min={1} max={6} step={1} onChange={(v) => setCols(Math.round(v))} />
+          <SliderField label="Rows" value={rows} min={1} max={6} step={1} onChange={(v) => setRows(Math.round(v))} />
+        </div>
+      )}
       <SliderField label="Gutter" value={gutter} min={0} max={120} step={1} unit="px" onChange={setGutter} />
       <SliderField label="Padding" value={padding} min={0} max={240} step={1} unit="px" onChange={setPadding} />
+      <SliderField label="Corners" value={radius} min={0} max={120} step={1} unit="px" onChange={setRadius} />
       <div class="field">
         <span>Where</span>
         <div class="seg" role="radiogroup" aria-label="Grid area">
@@ -88,8 +126,8 @@ export function GridDialog({ session, onClose }: { session: Session; onClose: ()
       ) : (
         <svg class="grid-preview" viewBox={`0 0 ${area.width} ${area.height}`} role="img" aria-label="Grid preview">
           <rect width={area.width} height={area.height} x={0} y={0} fill="var(--surface-2)" />
-          {cells.map((c) => (
-            <rect x={c.x - area.x} y={c.y - area.y} width={c.width} height={c.height} rx={16} fill="var(--accent-soft)" stroke="var(--accent)" stroke-width={Math.max(2, area.width / 300)} />
+          {cells.map((c, i) => (
+            <rect key={i} x={c.x - area.x} y={c.y - area.y} width={c.width} height={c.height} rx={Math.min(radius, c.width / 2, c.height / 2)} fill="var(--accent-soft)" stroke="var(--accent)" stroke-width={Math.max(2, area.width / 300)} />
           ))}
         </svg>
       )}

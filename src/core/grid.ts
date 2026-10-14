@@ -7,6 +7,7 @@ import { neutralAdjust } from './adjust';
 import { batch, type CommandResult, type Op } from './commands';
 import { canvasSize, slideRects, type Rect } from './geometry';
 import { createId } from './id';
+import { getGridLayout, layoutCells } from './gridLayouts';
 import type { FrameLayer, Layer, Project } from './types';
 
 export interface GridArgs {
@@ -21,6 +22,11 @@ export interface GridArgs {
    * explicit rectangle in panorama pixels.
    */
   area: 'canvas' | { slide: number } | Rect;
+  /**
+   * A named layout from core/gridLayouts (its cells replace rows x cols).
+   * `rows`/`cols` are ignored when this is set.
+   */
+  layout?: string;
   /** Corner radius of the generated frames (default 16). */
   cornerRadius?: number;
   /** Supply ids for deterministic output (tests); otherwise random. */
@@ -66,12 +72,23 @@ export function gridCells(area: Rect, args: Pick<GridArgs, 'rows' | 'cols' | 'gu
 }
 
 /** The frame layers a grid would create (not yet added to the project). */
+/** Cell rectangles for the grid args: a named layout or an even rows x cols grid. */
+export function gridArgsCells(project: Project, args: GridArgs): Rect[] {
+  const area = gridArea(project, args.area);
+  if (args.layout) {
+    const layout = getGridLayout(args.layout);
+    if (!layout) throw new RangeError(`Unknown grid layout "${args.layout}"`);
+    return layoutCells(area, layout.cells, args.gutter, args.padding);
+  }
+  return gridCells(area, args);
+}
+
 export function gridLayers(project: Project, args: GridArgs): FrameLayer[] {
-  const cells = gridCells(gridArea(project, args.area), args);
+  const cells = gridArgsCells(project, args);
   if (args.ids && args.ids.length < cells.length) throw new RangeError('Not enough ids supplied');
   return cells.map((cell, i) => {
-    const row = Math.floor(i / args.cols) + 1;
-    const col = (i % args.cols) + 1;
+    const row = Math.floor(i / Math.max(1, args.cols)) + 1;
+    const col = (i % Math.max(1, args.cols)) + 1;
     return {
       id: args.ids?.[i] ?? createId('lyr'),
       type: 'frame',
@@ -83,7 +100,7 @@ export function gridLayers(project: Project, args: GridArgs): FrameLayer[] {
       opacity: 1,
       locked: false,
       hidden: false,
-      name: `Frame r${row}c${col}`,
+      name: args.layout ? `Cell ${i + 1}` : `Frame r${row}c${col}`,
       props: {
         cornerRadius: args.cornerRadius ?? 16,
         assetId: null,
