@@ -1,0 +1,17 @@
+[package]
+name = "tauri-plugin-ios-webview"
+version = "0.1.0"
+description = "opnscrl: keeps the iOS WKWebView from scrolling and resizes it above the keyboard."
+authors = ["kapsikkum"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.77"
+publish = false
+# Required by tauri-plugin's build helper; it must match the package name.
+links = "tauri-plugin-ios-webview"
+
+[dependencies]
+tauri = { version = "2", features = [] }
+
+[build-dependencies]
+tauri-plugin = { version = "2", features = ["build"] }

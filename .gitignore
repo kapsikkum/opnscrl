@@ -5,5 +5,19 @@ dist
 .DS_Store
 .claude/
 
+# Rust / Tauri
+src-tauri/target/
+src-tauri/gen/apple/
+src-tauri/gen/android/.gradle/
+src-tauri/gen/android/build/
+src-tauri/gen/android/app/build/
+src-tauri/gen/android/local.properties
+src-tauri/gen/android/app/src/main/jniLibs/
+src-tauri/gen/android/.kotlin/
+*.keystore
+*.jks
+*.key
+*.key.pub
+
 # local test fixtures converted from third-party templates (never commit)
 fixtures/

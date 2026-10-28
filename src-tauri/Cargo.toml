@@ -1,0 +1,31 @@
+[package]
+name = "opnscrl"
+version = "0.1.0"
+description = "opnscrl: the carousel maker in a Tauri shell for iOS and Android."
+authors = ["kapsikkum"]
+license = "MIT"
+repository = "https://github.com/kapsikkum/opnscrl"
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "opnscrl_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Keyboard and scrolling fixes for the iOS web view, and the PhotoKit saver; Android and desktop never build them.
+[target.'cfg(target_os = "ios")'.dependencies]
+tauri-plugin-ios-webview = { path = "plugins/ios-webview" }
+tauri-plugin-ios-gallery = { path = "plugins/ios-gallery" }
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

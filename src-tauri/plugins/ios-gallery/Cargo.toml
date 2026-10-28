@@ -1,0 +1,18 @@
+[package]
+name = "tauri-plugin-ios-gallery"
+version = "0.1.0"
+description = "opnscrl: saves pictures to the iOS photo library."
+authors = ["kapsikkum"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.77"
+publish = false
+# Required by tauri-plugin's build helper; it must match the package name.
+links = "tauri-plugin-ios-gallery"
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde_json = "1"
+
+[build-dependencies]
+tauri-plugin = { version = "2", features = ["build"] }

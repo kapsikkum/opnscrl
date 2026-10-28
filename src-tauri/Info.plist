@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Merged into the iOS Info.plist by the Tauri CLI. Add-only access to the photo library. -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>opnscrl saves the pictures you export to your photo library.</string>
+</dict>
+</plist>

@@ -1,0 +1,8 @@
+# Written by tauri-plugin's build helper (a copy of Tauri's Swift API) and by SwiftPM.
+/.tauri
+/permissions
+ios/.build
+ios/.swiftpm
+ios/Package.resolved
+/Cargo.lock
+/target
