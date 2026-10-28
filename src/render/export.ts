@@ -18,6 +18,13 @@ export interface ExportOptions {
   onProgress?: (done: number, total: number) => void;
 }
 
+/** One rendered slice: `index` is the 0-based slide, `total` the number being exported. */
+export interface ExportedSlice {
+  index: number;
+  total: number;
+  blob: Blob;
+}
+
 async function loadFonts(project: Project): Promise<void> {
   if (typeof document === 'undefined' || !document.fonts) return;
   const wanted = new Set<string>();
@@ -31,6 +38,10 @@ async function loadFonts(project: Project): Promise<void> {
 }
 
 /**
+ * Lazy form of `exportSlides`: yields one slice at a time so the caller can hand
+ * each Blob on (save, upload) and drop it before the next one is drawn. Stopping
+ * early (`return()`, leaving a `for await`) destroys the stage.
+ *
  * Render the whole panorama at export resolution and cut it into one Blob per
  * slide. Implementation note: instead of allocating one giant canvas (which
  * breaks on iOS/Safari above ~16M pixels, i.e. 8+ slides), a single offscreen
@@ -38,17 +49,17 @@ async function loadFonts(project: Project): Promise<void> {
  * output is pixel-identical to rendering the full canvas and cropping it, and
  * peak memory stays at one slide. Editor guides are never part of this scene.
  */
-export async function exportSlides(
+export async function* exportSlidesIter(
   project: Project,
   resolveAsset: AssetResolver,
   opts: ExportOptions = {},
-): Promise<Blob[]> {
+): AsyncGenerator<ExportedSlice, void> {
   const format = opts.format ?? 'png';
   const quality = opts.quality ?? 0.92;
   const scale = opts.scale ?? 1;
   const only = opts.only ? new Set(opts.only) : null;
   const plan = slicePlan(project.canvas, scale).filter((s) => !only || only.has(s.index));
-  if (!plan.length) return [];
+  if (!plan.length) return;
   const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
 
   await loadFonts(project);
@@ -80,7 +91,7 @@ export async function exportSlides(
     reconciler.sync(project.layers);
     await Promise.all(pending);
 
-    const blobs: Blob[] = [];
+    let done = 0;
     for (const slice of plan) {
       stage.size({ width: slice.outWidth, height: slice.outHeight });
       world.setAttrs({
@@ -92,11 +103,21 @@ export async function exportSlides(
       layer.draw();
       const blob = await stage.toBlob({ mimeType, quality, pixelRatio: 1 });
       if (!blob) throw new Error(`Failed to encode slide ${slice.index + 1}`);
-      blobs.push(blob);
-      opts.onProgress?.(blobs.length, plan.length);
+      opts.onProgress?.(++done, plan.length);
+      yield { index: slice.index, total: plan.length, blob };
     }
-    return blobs;
   } finally {
     stage.destroy();
   }
+}
+
+/** Render the whole panorama and cut it into one Blob per slide (all held in memory). */
+export async function exportSlides(
+  project: Project,
+  resolveAsset: AssetResolver,
+  opts: ExportOptions = {},
+): Promise<Blob[]> {
+  const blobs: Blob[] = [];
+  for await (const s of exportSlidesIter(project, resolveAsset, opts)) blobs.push(s.blob);
+  return blobs;
 }

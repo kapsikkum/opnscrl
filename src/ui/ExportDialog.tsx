@@ -2,8 +2,9 @@ import { useRef, useState } from 'preact/hooks';
 import { ensureProjectFonts } from '../app/fonts';
 import { assetResolver, errorMessage, toast } from '../app/services';
 import { slicePlan } from '../core/geometry';
-import { canShareFiles, downloadSlices, downloadZip, shareSlices, type ImageFormat } from '../export';
-import { exportSlides } from '../render';
+import { canShareFiles, downloadSlices, downloadZip, shareSlices, sliceFileName, type ImageFormat } from '../export';
+import { albumFor, isNativeApp, saveSlicesToGallery, type GalleryProgress, type SaveResult } from '../export/native';
+import { exportSlides, exportSlidesIter } from '../render';
 import type { Session } from '../app/session';
 import { Dialog } from './Dialog';
 import { Icon } from './Icon';
@@ -15,6 +16,10 @@ export function ExportDialog({ session, onClose }: { session: Session; onClose: 
   const [quality, setQuality] = useState(0.92);
   const [scale, setScale] = useState(1);
   const [busy, setBusy] = useState<string | null>(null);
+  const [gallery, setGallery] = useState<GalleryProgress | null>(null);
+  const [galleryResult, setGalleryResult] = useState<SaveResult | null>(null);
+  const abort = useRef<AbortController | null>(null);
+  const native = isNativeApp();
   const cache = useRef<{ key: string; blobs: Blob[] } | null>(null);
 
   const project = session.editor.project.value;
@@ -62,6 +67,43 @@ export function ExportDialog({ session, onClose }: { session: Session; onClose: 
     }
   }
 
+  /** Render and save slices one by one straight into the phone's gallery (flat memory use). */
+  async function saveToPhotos(retry = false) {
+    const ctrl = new AbortController();
+    abort.current = ctrl;
+    setBusy('Saving...');
+    try {
+      let r: SaveResult;
+      if (retry && galleryResult) {
+        r = await galleryResult.retryFailed(ctrl.signal);
+      } else {
+        const p = session.editor.project.peek();
+        await ensureProjectFonts(p);
+        const total = slicePlan(p.canvas, scale).length;
+        const items = async function* () {
+          for await (const s of exportSlidesIter(p, assetResolver, { format, quality, scale })) {
+            yield { blob: s.blob, fileName: sliceFileName(p.name, s.index, total, format) };
+          }
+        };
+        setGallery({ done: 0, failed: 0, total });
+        r = await saveSlicesToGallery({ items: items(), total, album: albumFor(p.name), signal: ctrl.signal, onProgress: setGallery });
+      }
+      setGalleryResult(r);
+      if (r.status === 'permission-denied') {
+        setGallery(null);
+        toast('Photos access was denied. Allow it in the system settings to save slides to your gallery.', 'error', 7000);
+      } else if (r.status === 'cancelled') toast(`Cancelled: saved ${r.saved}`);
+      else if (r.failedItems.length) toast(`Saved ${r.saved}, ${r.failedItems.length} failed. Tap Retry to resend them.`, 'error', 7000);
+      else toast(`Saved ${r.saved} slide${r.saved === 1 ? '' : 's'} to Photos`, 'success');
+    } catch (e) {
+      console.error(e);
+      toast(`Export failed: ${errorMessage(e)}`, 'error', 7000);
+    } finally {
+      abort.current = null;
+      setBusy(null);
+    }
+  }
+
   return (
     <Dialog title="Export" onClose={onClose}>
       <div class="field">
@@ -101,8 +143,33 @@ export function ExportDialog({ session, onClose }: { session: Session; onClose: 
           {emptyFrames} empty frame{emptyFrames === 1 ? '' : 's'} will export as blank space. Add photos to fill {emptyFrames === 1 ? 'it' : 'them'}, or delete the frame.
         </p>
       ) : null}
+      {native && gallery ? (
+        <div class="gallery-progress" role="status">
+          <progress max={gallery.total} value={gallery.done + gallery.failed} />
+          <span>
+            Saved {gallery.done} of {gallery.total}
+            {gallery.failed ? `, ${gallery.failed} failed` : ''}
+          </span>
+        </div>
+      ) : null}
       <div class="btn-stack">
-        <button class="primary" disabled={!!busy} onClick={() => run('zip')}>
+        {native ? (
+          <>
+            {busy && abort.current ? (
+              <button onClick={() => abort.current?.abort()}>Cancel</button>
+            ) : (
+              <button class="primary" disabled={!!busy} onClick={() => saveToPhotos()}>
+                <Icon name="download" size={18} /> Save to Photos
+              </button>
+            )}
+            {galleryResult && galleryResult.failedItems.length ? (
+              <button disabled={!!busy} onClick={() => saveToPhotos(true)}>
+                Retry failed ({galleryResult.failedItems.length})
+              </button>
+            ) : null}
+          </>
+        ) : null}
+        <button class={native ? '' : 'primary'} disabled={!!busy} onClick={() => run('zip')}>
           <Icon name="download" size={18} /> Download ZIP
         </button>
         <button disabled={!!busy} onClick={() => run('files')}>
@@ -114,7 +181,7 @@ export function ExportDialog({ session, onClose }: { session: Session; onClose: 
           </button>
         ) : null}
       </div>
-      {busy ? (
+      {busy && !abort.current ? (
         <p class="muted" role="status">
           {busy}
         </p>
