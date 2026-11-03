@@ -137,9 +137,9 @@ describe('pickPhotos', () => {
     const files = await pickPhotos(true, invoke);
     expect(calls).toEqual(['pick_images', 'read_picked_image']);
     expect(files).toHaveLength(1);
-    expect(files[0].name).toBe('a.jpg');
-    expect(files[0].type).toBe('image/jpeg');
-    expect(files[0].size).toBe(3);
+    expect(files[0]!.name).toBe('a.jpg');
+    expect(files[0]!.type).toBe('image/jpeg');
+    expect(files[0]!.size).toBe(3);
   });
 
   it('returns nothing when the user cancels', async () => {

@@ -655,6 +655,9 @@ input.num {
 .editor {
   display: grid;
   grid-template-rows: auto 1fr auto;
+  /* An implicit `auto` column grows to the widest child's max-content (the nowrap tool row, the
+     inspector rows), pushing the whole editor off the right edge. Pin it to the container. */
+  grid-template-columns: minmax(0, 1fr);
   height: 100dvh;
   min-height: 0;
   background: var(--bg);
