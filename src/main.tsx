@@ -5,7 +5,13 @@ import { isNativeApp } from './export/native';
 import { App } from './ui/App';
 
 const native = isNativeApp();
-if (native) document.documentElement.classList.add('native-app');
+if (native) {
+  document.documentElement.classList.add('native-app');
+  // The app has its own zoom; stop the web view zooming on double tap or pinch.
+  document
+    .querySelector('meta[name="viewport"]')
+    ?.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+}
 
 // Android: MainActivity exposes the system-bar/cutout insets (CSS px) so the app can draw edge to edge.
 // It also pushes them itself; this pull covers reloads.
