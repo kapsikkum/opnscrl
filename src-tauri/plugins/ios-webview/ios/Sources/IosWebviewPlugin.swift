@@ -44,6 +44,7 @@ class IosWebviewPlugin: Plugin {
     scrollView.delegate = pinner
     scrollView.contentOffset = .zero
     hideInputAccessory(of: webview)
+    makeEdgeToEdge(webview)
 
     let center = NotificationCenter.default
     center.addObserver(
@@ -57,6 +58,35 @@ class IosWebviewPlugin: Plugin {
     center.addObserver(
       self, selector: #selector(keyboardDidChangeFrame(_:)),
       name: UIResponder.keyboardDidChangeFrameNotification, object: nil)
+  }
+
+  /// Edge to edge: the web view fills its whole container (not the safe area), and every layer
+  /// behind it is the app's background colour and see-through, so no white or black bars show at the
+  /// top or bottom. The page pads itself with env(safe-area-inset-*) (viewport-fit=cover).
+  private func makeEdgeToEdge(_ webview: WKWebView) {
+    let bg = UIColor(red: 0x16 / 255.0, green: 0x16 / 255.0, blue: 0x1a / 255.0, alpha: 1)
+    webview.isOpaque = false
+    webview.backgroundColor = bg
+    webview.scrollView.backgroundColor = bg
+    webview.scrollView.isOpaque = false
+    webview.insetsLayoutMarginsFromSafeArea = false
+    if #available(iOS 13.0, *) { webview.scrollView.automaticallyAdjustsScrollIndicatorInsets = false }
+    webview.scrollView.contentInset = .zero
+    webview.scrollView.scrollIndicatorInsets = .zero
+    if let container = webview.superview {
+      container.backgroundColor = bg
+      container.window?.backgroundColor = bg
+      container.window?.rootViewController?.view.backgroundColor = bg
+      webview.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+      if webview.frame != container.bounds { webview.frame = container.bounds }
+    }
+    // The window may not be attached yet when the plugin loads; settle once it is on screen.
+    DispatchQueue.main.async { [weak webview] in
+      guard let webview = webview, let container = webview.superview else { return }
+      container.backgroundColor = bg
+      container.window?.backgroundColor = bg
+      container.window?.rootViewController?.view.backgroundColor = bg
+    }
   }
 
   /// Removes the previous/next/done bar WebKit puts above the keyboard for form fields. The page has

@@ -61,11 +61,13 @@ class IosGalleryPlugin: Plugin {
     var status = PHPhotoLibrary.authorizationStatus(for: .addOnly)
     if status == .notDetermined {
       let done = DispatchSemaphore(value: 0)
+      let box = StatusBox()
       PHPhotoLibrary.requestAuthorization(for: .addOnly) { granted in
-        status = granted
+        box.value = granted
         done.signal()
       }
       done.wait()
+      status = box.value
     }
     guard status == .authorized || status == .limited else {
       throw GalleryError.denied
@@ -73,6 +75,7 @@ class IosGalleryPlugin: Plugin {
 
     let url = URL(fileURLWithPath: args.path)
     guard FileManager.default.fileExists(atPath: args.path) else { throw GalleryError.missingFile }
+    guard (try? url.checkResourceIsReachable()) == true else { throw GalleryError.missingFile }
     let uti = args.mime == "image/jpeg" ? "public.jpeg" : "public.png"
 
     // Keeps the memory of one picture from piling up over hundreds of saves.
@@ -124,6 +127,11 @@ class IosGalleryPlugin: Plugin {
     albumIds[title] = id
     UserDefaults.standard.set(albumIds, forKey: defaultsKey)
   }
+}
+
+/// Carries the answer of the permission prompt out of its callback (which runs on another thread).
+final class StatusBox {
+  var value: PHAuthorizationStatus = .notDetermined
 }
 
 enum GalleryError: LocalizedError {

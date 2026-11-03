@@ -51,6 +51,22 @@ jobs:
       - name: Generate the Xcode project
         run: npx tauri ios init --ci
 
+      - name: Make sure the app runs edge to edge
+        run: |
+          # An app with no launch screen is run letterboxed by iOS. Print what was generated, and add
+          # UILaunchScreen if neither it nor a storyboard is there.
+          PLIST="$(ls src-tauri/gen/apple/*/Info.plist | head -1)"
+          cat "$PLIST"
+          if ! /usr/libexec/PlistBuddy -c 'Print :UILaunchScreen' "$PLIST" >/dev/null 2>&1             && ! /usr/libexec/PlistBuddy -c 'Print :UILaunchStoryboardName' "$PLIST" >/dev/null 2>&1; then
+            /usr/libexec/PlistBuddy -c 'Add :UILaunchScreen dict' "$PLIST"
+          fi
+          # iOS kills the app the moment it asks for photo access without these strings.
+          for KEY in NSPhotoLibraryAddUsageDescription NSPhotoLibraryUsageDescription; do
+            if ! /usr/libexec/PlistBuddy -c "Print :$KEY" "$PLIST" >/dev/null 2>&1; then
+              /usr/libexec/PlistBuddy -c "Add :$KEY string opnscrl saves the pictures you export to your photo library." "$PLIST"
+            fi
+          done
+
       - name: Apply the app icon
         run: |
           # `tauri ios init` generates the Xcode project; regenerate the icons so its asset catalog uses ours.

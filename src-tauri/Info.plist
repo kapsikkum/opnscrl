@@ -5,5 +5,14 @@
 	<!-- Merged into the iOS Info.plist by the Tauri CLI. Add-only access to the photo library. -->
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>opnscrl saves the pictures you export to your photo library.</string>
+	<!-- Not asked for with add-only access; present so iOS never kills the app over a missing string. -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>opnscrl saves the pictures you export to your photo library.</string>
+	<!-- A launch screen makes iOS give the app the full screen; without one it runs letterboxed. -->
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIImageRespectsSafeAreaInsets</key>
+		<false/>
+	</dict>
 </dict>
 </plist>
