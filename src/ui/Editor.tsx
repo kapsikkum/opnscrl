@@ -23,6 +23,7 @@ import { relayoutOps } from '../core/grid';
 import { createRenderer, type Renderer } from '../render';
 import { Icon } from './Icon';
 import { goHome } from './nav';
+import { pickPhotos, usesNativePhotoPicker } from '../export/native';
 import { CanvasPanel, LayerPanel, SlidesPanel } from './Panels';
 import { Inspector } from './Inspector';
 import { ExportDialog } from './ExportDialog';
@@ -58,6 +59,8 @@ export function Editor({ session }: { session: Session }) {
   const photoInput = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<Tab>('edit');
   const [panelOpen, setPanelOpen] = useState(false);
+  const [panelH, setPanelH] = useState<number | null>(null);
+  const resizing = useRef<{ y: number; h: number } | null>(null);
   const [modal, setModal] = useState<Modal>(null);
   const [shapeMenu, setShapeMenu] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -216,11 +219,20 @@ export function Editor({ session }: { session: Session }) {
     }
   }
 
+  /** iOS app: the system Photos picker; elsewhere the file input. */
+  function pickPhoto() {
+    if (!usesNativePhotoPicker()) {
+      photoInput.current?.click();
+      return;
+    }
+    pickPhotos(true).then((files) => handleFiles(files), (e) => toast(errorMessage(e), 'error'));
+  }
+
   const focusSlide = (i: number) => rendererRef.current?.zoomToSlide(i);
   const addAt = () => session.currentSlide.peek();
 
   const tools: { id: string; label: string; icon: string; run: () => void }[] = [
-    { id: 'photo', label: 'Photo', icon: 'photo', run: () => photoInput.current?.click() },
+    { id: 'photo', label: 'Photo', icon: 'photo', run: () => pickPhoto() },
     { id: 'text', label: 'Text', icon: 'type', run: () => setEditingText(addText(editor, addAt())) },
     { id: 'shape', label: 'Shape', icon: 'shape', run: () => setShapeMenu((v) => !v) },
     { id: 'line', label: 'Line', icon: 'line', run: () => addLine(editor, addAt()) },
@@ -321,7 +333,31 @@ export function Editor({ session }: { session: Session }) {
           ) : null}
         </main>
 
-        <aside class={`panel${panelOpen ? ' open' : ''}`} aria-label="Properties">
+        <aside
+          class={`panel${panelOpen ? ' open' : ''}${panelH !== null ? ' sized' : ''}`}
+          style={panelH !== null ? { '--panel-h': `${panelH}px` } : undefined}
+          aria-label="Properties"
+        >
+          <div
+            class="panel-resize"
+            role="separator"
+            aria-orientation="horizontal"
+            aria-label="Resize panel"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.currentTarget.setPointerCapture(e.pointerId);
+              const body = e.currentTarget.parentElement?.querySelector('.panel-body') as HTMLElement | null;
+              resizing.current = { y: e.clientY, h: body?.offsetHeight ?? 200 };
+            }}
+            onPointerMove={(e) => {
+              const r = resizing.current;
+              if (!r) return;
+              const max = window.innerHeight * 0.7;
+              setPanelH(Math.round(Math.min(max, Math.max(80, r.h + (r.y - e.clientY)))));
+            }}
+            onPointerUp={() => (resizing.current = null)}
+            onPointerCancel={() => (resizing.current = null)}
+          />
           <div class="tabs" role="tablist">
             {TABS.map((t) => (
               <button

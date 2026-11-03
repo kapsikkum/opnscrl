@@ -1,5 +1,6 @@
 import { useRef } from 'preact/hooks';
 import { clearPhoto, deleteSelected, duplicateSelected, patchLayer, relayoutGrid, replacePhoto, selectGrid, ungroupGrid } from '../app/actions';
+import { pickPhotos, usesNativePhotoPicker } from '../export/native';
 import { errorMessage, toast } from '../app/services';
 import { selectionGridState, type GridSelectionState } from '../core/gridGroup';
 import type { Layer } from '../core/types';
@@ -36,7 +37,9 @@ function PhotoControls({ layer, editor }: { layer: Layer; editor: Editor }) {
     const el = e.currentTarget as HTMLInputElement;
     const file = el.files?.[0];
     el.value = '';
-    if (!file) return;
+    if (file) await apply(file);
+  }
+  async function apply(file: File) {
     try {
       await replacePhoto(editor, layer.id, file);
     } catch (err) {
@@ -47,7 +50,15 @@ function PhotoControls({ layer, editor }: { layer: Layer; editor: Editor }) {
     <section class="insp-section">
       <h3>Photo</h3>
       <div class="btn-row">
-        <button onClick={() => input.current?.click()}>
+        <button
+          onClick={() => {
+            if (!usesNativePhotoPicker()) return input.current?.click();
+            pickPhotos(false).then(
+              (files) => (files[0] ? apply(files[0]) : undefined),
+              (err) => toast(errorMessage(err), 'error'),
+            );
+          }}
+        >
           <Icon name="photo" size={18} /> {hasPhoto ? 'Replace photo' : 'Choose photo'}
         </button>
         {layer.type === 'frame' && hasPhoto ? <button onClick={() => clearPhoto(editor, layer.id)}>Remove photo</button> : null}

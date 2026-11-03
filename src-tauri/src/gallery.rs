@@ -216,6 +216,41 @@ pub async fn gallery_request_permission(app: AppHandle) -> Result<String, String
     permission(&app, "requestPermission")
 }
 
+/// iOS: opens the system Photos picker. The Swift side writes every chosen picture (HEIC converted to
+/// JPEG) into `<cache>/gallery/picked` and answers `{ files: [{ path, name, mime }] }`; an empty list
+/// means the user cancelled. The web app reads each file back with `read_picked_image`.
+#[tauri::command]
+pub async fn pick_images(app: AppHandle, multiple: bool) -> Result<Value, String> {
+    let dir = temp_dir(&app)?.join("picked");
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let payload = json!({ "dir": dir.to_string_lossy(), "multiple": multiple });
+    // Blocks until the user is done with the picker.
+    tauri::async_runtime::spawn_blocking(move || call(&app, "pickImages", payload))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+/// The bytes of a picture made by `pick_images` as a raw response; the file is deleted once read.
+#[tauri::command]
+pub async fn read_picked_image(
+    app: AppHandle,
+    path: String,
+) -> Result<tauri::ipc::Response, String> {
+    let dir = temp_dir(&app)?
+        .join("picked")
+        .canonicalize()
+        .map_err(|e| e.to_string())?;
+    let file = PathBuf::from(&path)
+        .canonicalize()
+        .map_err(|e| e.to_string())?;
+    if !file.starts_with(&dir) {
+        return Err("not a picked image".into());
+    }
+    let _cleanup = TempFile(file.clone());
+    let bytes = std::fs::read(&file).map_err(|e| e.to_string())?;
+    Ok(tauri::ipc::Response::new(bytes))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

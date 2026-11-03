@@ -25,6 +25,8 @@ pub fn run() {
             gallery::save_image_to_gallery,
             gallery::gallery_permission_status,
             gallery::gallery_request_permission,
+            gallery::pick_images,
+            gallery::read_picked_image,
         ])
         .run(tauri::generate_context!())
         .expect("error while running opnscrl");

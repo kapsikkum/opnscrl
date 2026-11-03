@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { errorMessage, toast } from '../app/services';
 import type { Session } from '../app/session';
+import { pickPhotos, usesNativePhotoPicker } from '../export/native';
 import { addBuiltinSticker, addEmoji, addLibraryStickerLayer, uploadStickers } from '../app/stickers';
 import { BUILTIN_STICKERS, stickerDataUrl } from '../layers/sticker/builtin';
 import { getAsset, listLibraryStickers, removeLibrarySticker, type StickerRecord } from '../storage';
@@ -97,7 +98,13 @@ export function StickerPicker({ session, onClose }: { session: Session; onClose:
       {tab === 'mine' ? (
         <>
           <div class="btn-row">
-            <button onClick={() => input.current?.click()} disabled={busy}>
+            <button
+              onClick={() => {
+                if (!usesNativePhotoPicker()) return input.current?.click();
+                pickPhotos(true).then((files) => onUpload(files), () => {});
+              }}
+              disabled={busy}
+            >
               <Icon name="plus" size={16} /> {busy ? 'Adding...' : 'Upload PNG or SVG'}
             </button>
             <input

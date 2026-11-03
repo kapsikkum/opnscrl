@@ -123,3 +123,27 @@ describe('albumFor', () => {
     expect(albumFor('   ')).toBe('opnscrl');
   });
 });
+
+describe('pickPhotos', () => {
+  it('turns picked temp files into File objects, reading each one back', async () => {
+    const { pickPhotos } = await import('../src/export/native');
+    const calls: string[] = [];
+    const invoke = async (cmd: string, args?: unknown) => {
+      calls.push(cmd);
+      if (cmd === 'pick_images') return { files: [{ path: '/tmp/a.jpg', name: 'a.jpg', mime: 'image/jpeg' }] };
+      expect((args as { path: string }).path).toBe('/tmp/a.jpg');
+      return new Uint8Array([1, 2, 3]).buffer;
+    };
+    const files = await pickPhotos(true, invoke);
+    expect(calls).toEqual(['pick_images', 'read_picked_image']);
+    expect(files).toHaveLength(1);
+    expect(files[0].name).toBe('a.jpg');
+    expect(files[0].type).toBe('image/jpeg');
+    expect(files[0].size).toBe(3);
+  });
+
+  it('returns nothing when the user cancels', async () => {
+    const { pickPhotos } = await import('../src/export/native');
+    expect(await pickPhotos(false, async () => ({ files: [] }))).toEqual([]);
+  });
+});

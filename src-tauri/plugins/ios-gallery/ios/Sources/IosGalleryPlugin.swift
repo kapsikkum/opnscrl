@@ -4,6 +4,8 @@
 // Access is add-only (NSPhotoLibraryAddUsageDescription): the app never reads the library.
 
 import Photos
+import PhotosUI
+import UniformTypeIdentifiers
 import Tauri
 import UIKit
 
@@ -53,6 +55,47 @@ class IosGalleryPlugin: Plugin {
         invoke.reject(error.localizedDescription)
       }
     }
+  }
+
+  // MARK: Photos picker
+
+  private var pickerDelegate: PickerDelegate?
+
+  /// The system Photos picker (no library permission needed). Chosen pictures are written to
+  /// `args.dir`; HEIC and other formats the web view's pipeline may not decode become JPEG.
+  @objc public func pickImages(_ invoke: Invoke) throws {
+    let args = try invoke.parseArgs(PickImagesArgs.self)
+    DispatchQueue.main.async {
+      var config = PHPickerConfiguration(photoLibrary: .shared())
+      config.filter = .images
+      config.selectionLimit = (args.multiple ?? true) ? 0 : 1
+      config.preferredAssetRepresentationMode = .current
+      let picker = PHPickerViewController(configuration: config)
+      let delegate = PickerDelegate(dir: URL(fileURLWithPath: args.dir), queue: self.queue) { result in
+        self.pickerDelegate = nil
+        switch result {
+        case .success(let files): invoke.resolve(["files": files])
+        case .failure(let error): invoke.reject(error.localizedDescription)
+        }
+      }
+      self.pickerDelegate = delegate
+      picker.delegate = delegate
+      guard let host = self.presenter() else {
+        self.pickerDelegate = nil
+        invoke.reject("No screen to show the picker on.")
+        return
+      }
+      host.present(picker, animated: true)
+    }
+  }
+
+  private func presenter() -> UIViewController? {
+    var top: UIViewController? =
+      manager.viewController
+      ?? UIApplication.shared.connectedScenes.compactMap { ($0 as? UIWindowScene)?.windows.first(where: \.isKeyWindow) }
+      .first?.rootViewController
+    while let next = top?.presentedViewController { top = next }
+    return top
   }
 
   private func save(_ args: SaveImageArgs) throws {
@@ -132,6 +175,80 @@ class IosGalleryPlugin: Plugin {
 /// Carries the answer of the permission prompt out of its callback (which runs on another thread).
 final class StatusBox {
   var value: PHAuthorizationStatus = .notDetermined
+}
+
+struct PickImagesArgs: Decodable {
+  let dir: String
+  let multiple: Bool?
+}
+
+/// Receives the picker's choice, copies each picture to a temp file one at a time (so memory stays
+/// at one picture) and reports `{ path, name, mime }` for each, in the order chosen.
+final class PickerDelegate: NSObject, PHPickerViewControllerDelegate {
+  private let dir: URL
+  private let queue: DispatchQueue
+  private let done: (Result<[[String: String]], Error>) -> Void
+
+  init(
+    dir: URL, queue: DispatchQueue, done: @escaping (Result<[[String: String]], Error>) -> Void
+  ) {
+    self.dir = dir
+    self.queue = queue
+    self.done = done
+  }
+
+  func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+    picker.dismiss(animated: true)
+    queue.async {
+      var files: [[String: String]] = []
+      var failure: Error?
+      for result in results {
+        // loadFileRepresentation hands over a temporary file that is deleted when the callback returns.
+        let sem = DispatchSemaphore(value: 0)
+        result.itemProvider.loadFileRepresentation(forTypeIdentifier: UTType.image.identifier) {
+          url, error in
+          defer { sem.signal() }
+          guard let url = url else {
+            failure = failure ?? error
+            return
+          }
+          autoreleasepool {
+            if let file = self.copy(url) { files.append(file) }
+          }
+        }
+        sem.wait()
+      }
+      if files.isEmpty, let failure = failure {
+        self.done(.failure(failure))
+      } else {
+        self.done(.success(files))
+      }
+    }
+  }
+
+  private func copy(_ source: URL) -> [String: String]? {
+    let id = UUID().uuidString
+    let type = UTType(filenameExtension: source.pathExtension)
+    let passThrough: [UTType] = [.png, .jpeg, .gif, .webP]
+    do {
+      if let type = type, passThrough.contains(where: { type.conforms(to: $0) }) {
+        let ext = source.pathExtension.lowercased()
+        let target = dir.appendingPathComponent("\(id).\(ext)")
+        try FileManager.default.copyItem(at: source, to: target)
+        let mime = type.preferredMIMEType ?? "image/\(ext)"
+        return ["path": target.path, "name": "photo-\(id.prefix(8)).\(ext)", "mime": mime]
+      }
+      // HEIC, TIFF, etc.: decode with UIKit (keeps the orientation) and store as JPEG.
+      guard let image = UIImage(contentsOfFile: source.path),
+        let data = image.jpegData(compressionQuality: 0.92)
+      else { return nil }
+      let target = dir.appendingPathComponent("\(id).jpg")
+      try data.write(to: target)
+      return ["path": target.path, "name": "photo-\(id.prefix(8)).jpg", "mime": "image/jpeg"]
+    } catch {
+      return nil
+    }
+  }
 }
 
 enum GalleryError: LocalizedError {

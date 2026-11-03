@@ -186,3 +186,32 @@ export async function saveSlicesToGallery(opts: SaveSlicesOptions): Promise<Save
   }
   return result(status);
 }
+
+/** True in the iOS app, where photos are picked with the system Photos picker instead of an <input>. */
+export function usesNativePhotoPicker(): boolean {
+  if (!isNativeApp() || typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+}
+
+interface PickedImage {
+  path: string;
+  name: string;
+  mime: string;
+}
+
+/**
+ * Open the native Photos picker (iOS) and return the chosen pictures as File objects, so they go through
+ * the same handlers as an <input type=file>. The Swift side writes each one to a temp file (HEIC is turned
+ * into JPEG); each is read back through `read_picked_image` one at a time, which also deletes it.
+ * Resolves to [] when the user cancels.
+ */
+export async function pickPhotos(multiple: boolean, invoke: InvokeFn = nativeInvoke()): Promise<File[]> {
+  const res = (await invoke('pick_images', { multiple })) as { files?: PickedImage[] } | null;
+  const out: File[] = [];
+  for (const f of res?.files ?? []) {
+    const data = (await invoke('read_picked_image', { path: f.path })) as ArrayBuffer;
+    out.push(new File([data], f.name, { type: f.mime }));
+  }
+  return out;
+}

@@ -1,7 +1,7 @@
 {
   "name": "opnscrl",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Open-source PWA for seamless multi-slide Instagram carousels",
   "scripts": {

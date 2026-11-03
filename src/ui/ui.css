@@ -408,6 +408,9 @@ input.num {
 .dialog-body {
   padding: 8px 16px 16px;
   overflow: auto;
+  min-height: 0; /* flex child: lets it shrink to the dialog's max-height and scroll */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .dialog-foot {
   display: flex;
@@ -795,10 +798,36 @@ input.num {
   display: none;
   overflow: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
 }
 .panel.open .panel-body {
   display: block;
-  max-height: 44dvh;
+  max-height: 38dvh;
+}
+/* After the user drags the handle, the body takes exactly that height (--panel-h). */
+.panel.sized .panel-body {
+  height: var(--panel-h);
+  max-height: 70dvh;
+}
+.panel-resize {
+  display: none;
+  place-items: center;
+  height: 22px;
+  touch-action: none;
+  cursor: ns-resize;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.panel.open .panel-resize {
+  display: grid;
+}
+.panel-resize::before {
+  content: '';
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
 }
 .panel-pad {
   padding: 8px 14px 18px;
@@ -945,8 +974,13 @@ input.num {
     flex: 1;
     max-height: none;
   }
-  .panel.open .panel-body {
+  .panel.open .panel-body,
+  .panel.sized .panel-body {
     max-height: none;
+    height: auto;
+  }
+  .panel.open .panel-resize {
+    display: none;
   }
   .toolbar {
     justify-content: center;
@@ -1292,6 +1326,18 @@ input.num {
   inset: 0;
   width: 100%;
   -webkit-text-size-adjust: 100%;
+}
+/* The page itself never scrolls or rubber-bands (html/body are pinned); #app is the one scroll
+   container for screens that are taller than the phone (Home). The editor fills it exactly and its
+   panels, dialogs and lists scroll inside their own overflow:auto boxes. */
+.native-app #app {
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.native-app .editor {
+  height: 100%;
 }
 .native-app body {
   -webkit-user-select: none;
